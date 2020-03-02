@@ -1,0 +1,4 @@
+# format options
+--indent tabs
+--tabwidth 2
+--swiftversion 5.1
