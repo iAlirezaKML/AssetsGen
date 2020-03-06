@@ -1,9 +1,9 @@
 import Foundation
 
 #if os(macOS)
-import Darwin.POSIX
+	import Darwin.POSIX
 #else
-import Glibc
+	import Glibc
 #endif
 
 import SwiftFormat

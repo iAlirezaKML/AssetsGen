@@ -33,3 +33,8 @@ public func / (lhs: String, rhs: String) -> String {
 	let char = !lhs.isEmpty && !rhs.isEmpty ? "/" : ""
 	return "\(lhs)\(char)\(rhs)"
 }
+
+public func - (lhs: String, rhs: String) -> String {
+	let char = !lhs.isEmpty && !rhs.isEmpty ? "-" : ""
+	return "\(lhs)\(char)\(rhs)"
+}

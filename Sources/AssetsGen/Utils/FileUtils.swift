@@ -18,6 +18,7 @@ public struct FileUtils {
 	}
 
 	public static func remove(atPath path: String) {
+		guard FileManager.default.fileExists(atPath: path) else { return }
 		do {
 			try FileManager.default.removeItem(atPath: path)
 		} catch {

@@ -12,6 +12,7 @@ public struct LocalizedStringsGenerator {
 		let langs = strings
 			.flatMap { $0.values.keys }
 			.reduce(into: Set<LocalizedLanguageKey>()) { $0.insert($1) }
+			.filter { !$0.isSpecific }
 
 		self.name = name
 		self.langs = langs
@@ -23,6 +24,13 @@ public struct LocalizedStringsGenerator {
 			.compactMap { $0.localizable(lang: lang) }
 			.joined(separator: "\n\n")
 		return content
+	}
+
+	public func xml(for lang: LocalizedLanguageKey) -> XMLDocument {
+		let root = XMLElement(name: "resources")
+		let xml = XMLDocument(rootElement: root)
+		strings.compactMap { $0.xml(lang: lang) }.forEach(root.addChild)
+		return xml
 	}
 
 	public var swiftCode: LocalizedStringSwiftCode {
@@ -43,12 +51,21 @@ public struct LocalizedStringsGenerator {
 	public func generate(at outputPath: String) {
 		langs.forEach { lang in
 			let content = localized(for: lang)
-			let fileName = "\(lang).lproj/Localizable.strings"
+			let fileName = "\(lang.langValue).lproj/Localizable.strings"
 			FileUtils.save(contents: content, inPath: "\(outputPath)/\(fileName)")
 		}
 
 		let content = swiftCode
 		let fileName = FileUtils.swiftFileName(from: name)
 		FileUtils.save(contents: content, inPath: "\(outputPath)/\(fileName)")
+	}
+
+	public func xmlDocument(at outputPath: String) {
+		langs.forEach { lang in
+			let content = xml(for: lang)
+			let fileName = "res/\("values" - lang.langValue)/strings.xml"
+			let contents = content.xmlString(options: .nodePrettyPrint).trimmingCharacters(in: .whitespacesAndNewlines)
+			FileUtils.save(contents: contents, inPath: "\(outputPath)/\(fileName)")
+		}
 	}
 }

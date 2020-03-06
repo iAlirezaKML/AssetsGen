@@ -67,6 +67,7 @@ do {
 	print("Genrating strings...")
 	let stringGen = LocalizedStringsGenerator(inputPath: "\(inputPath)/\(stringSourceName)")
 	stringGen?.generate(at: outputPath)
+	stringGen?.xmlDocument(at: outputPath)
 	print("Strings generated successfully!")
 
 	print("Genrating assets...")
