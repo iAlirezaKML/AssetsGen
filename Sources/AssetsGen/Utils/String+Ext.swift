@@ -3,6 +3,10 @@ import Foundation
 private let badChars = CharacterSet.alphanumerics.inverted
 
 extension String {
+	public var escapedQuotes: Self {
+		replacingOccurrences(of: "\\\"", with: "\"")
+	}
+
 	public var unescapedQuotes: Self {
 		replacingOccurrences(of: "\"", with: #"\""#)
 	}

@@ -68,6 +68,7 @@ do {
 	let stringGen = LocalizedStringsGenerator(inputPath: "\(inputPath)/\(stringSourceName)")
 	stringGen?.generate(at: outputPath)
 	stringGen?.xmlDocument(at: outputPath)
+	stringGen?.generateTranslationSources(basedOn: "en", outputPath: outputPath)
 	print("Strings generated successfully!")
 
 	print("Genrating assets...")
