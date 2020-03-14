@@ -11,7 +11,7 @@ struct AssetsGenerator {
 	}
 
 	func saveContentsJSON(_ json: ContentsJSON, path: String) {
-		FileUtils.save(contentsJSON: json, inPath: path / "Contents.json")
+		FileUtils.save(json, inPath: path / "Contents.json")
 	}
 
 	func copyResources(for asset: ImageAsset, in path: String, at resourcesPath: String) {

@@ -1,17 +1,38 @@
 import Foundation
+import XMLCoder
 
 struct AndroidXML: Codable {
 	struct AndroidString: Codable {
 		let name: String
-		let content: String
+		let content: String?
 
 		enum CodingKeys: String, CodingKey {
 			case name
-			case content = ""
+		}
+
+		init(from decoder: Decoder) throws {
+			let container = try decoder.container(keyedBy: CodingKeys.self)
+			name = try container.decode(String.self, forKey: .name)
+			let singleContainer = try decoder.singleValueContainer()
+			content = try singleContainer.decode(String?.self)
+		}
+
+		func encode(to encoder: Encoder) throws {
+			var container = encoder.container(keyedBy: CodingKeys.self)
+			try container.encode(name, forKey: .name)
+			var singleContainer = encoder.singleValueContainer()
+			try singleContainer.encode(content)
 		}
 
 		var isAttributed: Bool {
-			content.contains("<") && content.contains(">")
+			if let content = content {
+				return content.contains("<") && content.contains(">")
+			} else {
+				// original string had some tags,
+				// and we couldn't parse raw string value,
+				// so it should be attributed
+				return true
+			}
 		}
 	}
 

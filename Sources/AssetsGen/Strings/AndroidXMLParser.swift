@@ -2,10 +2,10 @@ import Foundation
 import XMLCoder
 
 class AndroidXMLParser {
-	private(set) var strings: [LocalizedString]
+	private(set) var strings: [StringsSource.StringItem]
 
 	init(
-		strings: [LocalizedString] = [],
+		strings: [StringsSource.StringItem] = [],
 		langs: [LanguageKey],
 		inputPath: String
 	) {
@@ -14,7 +14,7 @@ class AndroidXMLParser {
 		do {
 			let decoder = XMLDecoder()
 			let xmls = try langs.map { lang in
-				"\(inputPath)/\(lang.langValue).seed.xml"
+				inputPath / "\(lang.langValue).seed.xml"
 			}
 			.map { path in
 				FileUtils.data(atPath: path)
@@ -36,28 +36,22 @@ class AndroidXMLParser {
 	}
 
 	func parse(outputPath: String) {
-		do {
-			let data = try JSONEncoder().encode(strings)
-			let str = String(data: data, encoding: .utf8)
-			let fileName = "seed.json"
-			FileUtils.save(contents: str!, inPath: "\(outputPath)/\(fileName)")
-		} catch {
-			print(error)
-		}
+		let fileName = "seed.json"
+		FileUtils.save(strings, inPath: outputPath / fileName)
 	}
 
 	func parse(lang: LanguageKey, xml: AndroidXML) {
 		let singles = xml.strings.map {
-			LocalizedString(
+			StringsSource.StringItem(
 				key: $0.name,
 				comment: nil,
 				type: $0.isAttributed ? .attributed : .single,
 				variables: nil,
-				values: [lang.langValue: .single($0.content)]
+				values: [lang.langValue: .single($0.content ?? "")]
 			)
 		}
 		let arrays = xml.stringArrays.map {
-			LocalizedString(
+			StringsSource.StringItem(
 				key: $0.name,
 				comment: nil,
 				type: .array,

@@ -1,8 +1,13 @@
 import Foundation
 
-enum OS: String, Codable {
+enum OS: String, Codable, ExpressibleByStringLiteral {
 	case iOS = "ios"
 	case android
+
+	init(stringLiteral value: String) {
+		let os = OS(rawValue: value.lowercased()) ?? .iOS
+		self = os
+	}
 }
 
 enum LanguageKey: RawRepresentable, Codable, Hashable, ExpressibleByStringLiteral {

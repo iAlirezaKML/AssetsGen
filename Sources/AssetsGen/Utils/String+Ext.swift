@@ -24,12 +24,13 @@ extension String {
 			return ""
 		}
 
+		let pre = starts(with: "_") ? "_" : ""
 		let parts = components(separatedBy: badChars)
 
 		let first = String(describing: parts.first!).lowercasingFirst
 		let rest = parts.dropFirst().map { String($0).uppercasingFirst }
 
-		return ([first] + rest).joined(separator: "")
+		return ([pre, first] + rest).joined(separator: "")
 	}
 }
 

@@ -2,9 +2,9 @@ import Foundation
 import XMLCoder
 
 struct XLIFFConverter {
-	let generator: StringsGenerator
+	let generator: StringGenerator
 
-	init(generator: StringsGenerator) {
+	init(generator: StringGenerator) {
 		self.generator = generator
 	}
 
@@ -15,16 +15,14 @@ struct XLIFFConverter {
 		do {
 			let xliff = try XMLDecoder().decode(XLIFF.self, from: source)
 			let strings = parse(xliff: xliff)
-			let data = try! JSONEncoder().encode(strings)
-			let str = String(data: data, encoding: .utf8)
 			let fileName = "strings.json"
-			FileUtils.save(contents: str!, inPath: "\(outputPath)/\(fileName)")
+			FileUtils.save(strings, inPath: outputPath / fileName)
 		} catch {
 			print(error)
 		}
 	}
 
-	func parse(xliff: XLIFF) -> [LocalizedString] {
+	func parse(xliff: XLIFF) -> [StringsSource.StringItem] {
 		let strings = generator.strings
 		xliff.files.forEach { file in
 			file.body.transUnits.forEach { unit in
@@ -87,7 +85,7 @@ struct XLIFFConverter {
 		\(content)
 		"""
 		let fileName = "\(targetLang.langValue).xliff"
-		FileUtils.save(contents: contents, inPath: "\(outputPath)/\(fileName)")
+		FileUtils.save(contents: contents, inPath: outputPath / fileName)
 	}
 
 	func generate(
