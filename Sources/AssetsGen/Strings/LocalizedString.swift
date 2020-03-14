@@ -1,72 +1,64 @@
 import Foundation
 
-// public typealias LocalizedStringContent = String
-public typealias LocalizedStringSwiftCode = String
-
-public class LocalizedString: Codable {
-	public enum StringType: String, Codable {
+class LocalizedString: Codable {
+	enum StringType: String, Codable {
 		case single
 		case attributed
 		case array
 
-		public func swiftCode(
+		func swiftCode(
 			name: String,
 			key: String,
 			comment: String?,
 			args: String?,
 			vars: String?
-		) -> LocalizedStringSwiftCode {
+		) -> SwiftCode {
 			let comment = comment ?? ""
 			let args = args ?? ""
 			let vars = vars ?? ""
 			switch self {
 			case .single:
-				return """
-				public static func \(name)(\(args)) -> String {
-				return String(
-				format: NSLocalizedString(
-				"\(key)",
-				comment: "\(comment)"
-				)\(vars)
-				)
-				}
-				"""
+				return [
+					.funcReturnString(
+						name: name,
+						key: key,
+						comment: comment,
+						args: args,
+						vars: vars
+					),
+				]
 			case .attributed:
-				return """
-				public static func \(name)(\(args)) -> NSAttributedString? {
-				return try? ZSWTaggedString(
-				format: NSLocalizedString(
-				"\(key)",
-				comment: "\(comment)"
-				)\(vars)
-				).attributedString()
-				}
-				"""
+				return [
+					.funcReturnAttributedString(
+						name: name,
+						key: key,
+						comment: comment,
+						args: args,
+						vars: vars
+					),
+				]
 			case .array:
-				return """
-				public static func \(name)() -> [String] {
-				return parseItems(
-				NSLocalizedString(
-				"\(key)",
-				comment: "\(comment)"
-				)
-				)
-				}
-				"""
+				return [
+					.funcReturnStringArray(
+						name: name,
+						key: key,
+						comment: comment
+					),
+				]
 			}
 		}
 	}
 
-	public struct Variable: Codable {
-		public let name: String
-		public let type: String
+	struct Variable: Codable {
+		let name: String
+		let type: String
 	}
 
-	public enum Value: Codable {
+	enum Value: Codable {
 		case single(String)
 		case array([String])
 
-		public init(from decoder: Decoder) throws {
+		init(from decoder: Decoder) throws {
 			let container = try decoder.singleValueContainer()
 			do {
 				let value = try container.decode(String.self)
@@ -77,7 +69,7 @@ public class LocalizedString: Codable {
 			}
 		}
 
-		public func encode(to encoder: Encoder) throws {
+		func encode(to encoder: Encoder) throws {
 			switch self {
 			case let .single(value):
 				var container = encoder.singleValueContainer()
@@ -88,7 +80,20 @@ public class LocalizedString: Codable {
 			}
 		}
 
-		public var localizableValue: String {
+		init(_ string: String) {
+			if string.starts(with: "<item>") {
+				let strings = string
+					.replacingOccurrences(of: "<item>", with: "")
+					.replacingOccurrences(of: "</item>", with: "~")
+					.split(separator: "~")
+					.map(String.init)
+				self = .array(strings)
+			} else {
+				self = .single(string)
+			}
+		}
+
+		var localizableValue: String {
 			switch self {
 			case let .single(string):
 				return string.unescapedQuotes
@@ -99,7 +104,7 @@ public class LocalizedString: Codable {
 			}
 		}
 
-		public func xml(type: StringType) -> XMLElement {
+		func xml(type: StringType) -> XMLElement {
 			switch self {
 			case let .single(string):
 				let element = XMLElement(name: "string")
@@ -119,22 +124,31 @@ public class LocalizedString: Codable {
 		}
 	}
 
-	public let key: String
-	public let comment: String?
-	private let _type: StringType?
-	public let variables: [Variable]?
-	public let _values: [String: Value]
+	struct Content {
+		let lang: LanguageKey
+		let comment: String
+		let key: String
+		let value: String
 
-	public var type: StringType {
+		var localizedContent: String {
+			String(
+				format: "/* %@ */\n\"%@\" = \"%@\"",
+				comment, key, value
+			)
+		}
+	}
+
+	let key: String
+	let comment: String?
+	private let _type: StringType?
+	let variables: [Variable]?
+	private(set) var _values: [String: Value]
+
+	var type: StringType {
 		_type ?? .single
 	}
 
-	public lazy var values: [LocalizedLanguageKey: Value] = {
-		let array = _values.map {
-			(LocalizedLanguageKey(rawValue: $0) ?? .raw($0), $1)
-		}
-		return Dictionary(uniqueKeysWithValues: array)
-	}()
+	private(set) lazy var values = _computeValues()
 
 	enum CodingKeys: String, CodingKey {
 		case key
@@ -144,14 +158,44 @@ public class LocalizedString: Codable {
 		case _values = "values"
 	}
 
-	public func value(for lang: LocalizedLanguageKey, with osPriority: OS) -> Value? {
+	init(
+		key: String,
+		comment: String?,
+		type: StringType,
+		variables: [Variable]?,
+		values: [String: Value]
+	) {
+		self.key = key
+		self.comment = comment
+		_type = type
+		self.variables = variables
+		_values = values
+	}
+
+	private func _computeValues() -> [LanguageKey: Value] {
+		let array = _values.map {
+			(LanguageKey(rawValue: $0) ?? .raw($0), $1)
+		}
+		return Dictionary(uniqueKeysWithValues: array)
+	}
+
+	func set(_ value: String, for key: LanguageKey) {
+		set(Value(value), for: key)
+	}
+
+	func set(_ value: Value, for key: LanguageKey) {
+		_values[key.langValue] = value
+		values = _computeValues()
+	}
+
+	func value(for lang: LanguageKey, with osPriority: OS) -> Value? {
 		values[lang.specific(for: osPriority)] ??
 			values[lang]
 	}
 
-	public func localizable(lang: LocalizedLanguageKey) -> LocalizedStringContent? {
+	func localizable(lang: LanguageKey) -> Content? {
 		guard let value = value(for: lang, with: .iOS) else { return nil }
-		return LocalizedStringContent(
+		return Content(
 			lang: lang,
 			comment: comment ?? "No comments",
 			key: key,
@@ -159,7 +203,7 @@ public class LocalizedString: Codable {
 		)
 	}
 
-	public var swiftCode: LocalizedStringSwiftCode {
+	var swiftCode: SwiftCode {
 		type.swiftCode(
 			name: key.camelCased,
 			key: key.unescapedQuotes,
@@ -173,7 +217,7 @@ public class LocalizedString: Codable {
 		)
 	}
 
-	public func xml(lang: LocalizedLanguageKey) -> XMLElement? {
+	func xml(lang: LanguageKey) -> XMLElement? {
 		guard let value = value(for: lang, with: .android) else { return nil }
 		let node = value.xml(type: type)
 		node.setAttributesWith(["name": key])

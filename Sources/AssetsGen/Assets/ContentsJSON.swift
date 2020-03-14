@@ -1,27 +1,27 @@
 import Foundation
 
-public struct ContentsJSON: Codable {
-	public struct Image: Codable {
-		public enum Idiom: String, Codable {
+struct ContentsJSON: Codable {
+	struct Image: Codable {
+		enum Idiom: String, Codable {
 			case universal
 		}
 
-		public enum Scale: String, Codable {
+		enum Scale: String, Codable {
 			case x1 = "1x"
 			case x2 = "2x"
 			case x3 = "3x"
 		}
 
-		public enum LanguageDirection: String, Codable {
+		enum LanguageDirection: String, Codable {
 			case leftToRight = "left-to-right"
 		}
 
-		public let idiom: Idiom
-		public let filename: String
-		public let scale: Scale?
-		public let languageDirection: LanguageDirection?
+		let idiom: Idiom
+		let filename: String
+		let scale: Scale?
+		let languageDirection: LanguageDirection?
 
-		public init(
+		init(
 			idiom: Idiom = .universal,
 			filename: String,
 			scale: Scale?,
@@ -41,16 +41,16 @@ public struct ContentsJSON: Codable {
 		}
 	}
 
-	public struct Info: Codable {
-		public let version: Int
-		public let author: String
+	struct Info: Codable {
+		let version: Int
+		let author: String
 
-		public static let `default` = Info(
+		static let `default` = Info(
 			version: 1,
 			author: "xcode"
 		)
 
-		public init(
+		init(
 			version: Int,
 			author: String
 		) {
@@ -59,11 +59,11 @@ public struct ContentsJSON: Codable {
 		}
 	}
 
-	public struct Properties: Codable {
-		public let _providesNamespace: Bool?
-		public let _preservesVectorRepresentation: Bool?
+	struct Properties: Codable {
+		let _providesNamespace: Bool?
+		let _preservesVectorRepresentation: Bool?
 
-		public init(
+		init(
 			providesNamespace: Bool? = nil,
 			preservesVectorRepresentation: Bool? = nil
 		) {
@@ -71,11 +71,11 @@ public struct ContentsJSON: Codable {
 			_preservesVectorRepresentation = preservesVectorRepresentation
 		}
 
-		public var providesNamespace: Bool {
+		var providesNamespace: Bool {
 			_providesNamespace ?? true
 		}
 
-		public var preservesVectorRepresentation: Bool {
+		var preservesVectorRepresentation: Bool {
 			_preservesVectorRepresentation ?? true
 		}
 
@@ -85,11 +85,11 @@ public struct ContentsJSON: Codable {
 		}
 	}
 
-	public let images: [Image]?
-	public let info: Info
-	public let properties: Properties?
+	let images: [Image]?
+	let info: Info
+	let properties: Properties?
 
-	public init(
+	init(
 		images: [Image]? = nil,
 		info: Info = .default,
 		properties: Properties? = nil

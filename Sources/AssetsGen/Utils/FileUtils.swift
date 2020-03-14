@@ -1,11 +1,11 @@
 import Foundation
 
-public struct FileUtils {
-	public static func data(atPath path: String) -> Data? {
+struct FileUtils {
+	static func data(atPath path: String) -> Data? {
 		FileManager.default.contents(atPath: path)
 	}
 
-	public static func value<T: Decodable>(atPath path: String) -> T? {
+	static func value<T: Decodable>(atPath path: String) -> T? {
 		guard let data = data(atPath: path) else { return nil }
 		let decoder = JSONDecoder()
 		do {
@@ -17,7 +17,7 @@ public struct FileUtils {
 		}
 	}
 
-	public static func remove(atPath path: String) {
+	static func remove(atPath path: String) {
 		guard FileManager.default.fileExists(atPath: path) else { return }
 		do {
 			try FileManager.default.removeItem(atPath: path)
@@ -27,7 +27,7 @@ public struct FileUtils {
 		}
 	}
 
-	public static func save(contents: String, inPath path: String) {
+	static func save(contents: String, inPath path: String) {
 		if !FileManager.default.fileExists(atPath: path) {
 			do {
 				let url = URL(fileURLWithPath: path)
@@ -48,7 +48,7 @@ public struct FileUtils {
 		}
 	}
 
-	public static func save(contentsJSON: ContentsJSON, inPath path: String) {
+	static func save(contentsJSON: ContentsJSON, inPath path: String) {
 		let encoder = JSONEncoder()
 		encoder.outputFormatting = .prettyPrinted
 		do {
@@ -62,7 +62,7 @@ public struct FileUtils {
 		}
 	}
 
-	public static func copy(from source: String, to destination: String) {
+	static func copy(from source: String, to destination: String) {
 		do {
 			try FileManager.default.copyItem(atPath: source, toPath: destination)
 		} catch {
@@ -71,11 +71,11 @@ public struct FileUtils {
 		}
 	}
 
-	public static func swiftFileName(from name: String) -> String {
+	static func swiftFileName(from name: String) -> String {
 		"\(name).generated.swift"
 	}
 
-	public static func xcassetsFileName(from name: String) -> String {
+	static func xcassetsFileName(from name: String) -> String {
 		"\(name.capitalized).xcassets"
 	}
 }

@@ -1,20 +1,20 @@
 import Foundation
 
-public struct AssetsGenerator {
-	public let containers: [AssetsContainer]
+struct AssetsGenerator {
+	let containers: [AssetsContainer]
 
-	public init?(inputPath: String) {
+	init?(inputPath: String) {
 		guard
 			let containers: [AssetsContainer] = FileUtils.value(atPath: inputPath)
 		else { return nil }
 		self.containers = containers
 	}
 
-	public func saveContentsJSON(_ json: ContentsJSON, path: String) {
+	func saveContentsJSON(_ json: ContentsJSON, path: String) {
 		FileUtils.save(contentsJSON: json, inPath: path / "Contents.json")
 	}
 
-	public func copyResources(for asset: ImageAsset, in path: String, at resourcesPath: String) {
+	func copyResources(for asset: ImageAsset, in path: String, at resourcesPath: String) {
 		asset.resourcePaths.forEach {
 			let from = resourcesPath / $0
 			let to = path / $0
@@ -22,13 +22,13 @@ public struct AssetsGenerator {
 		}
 	}
 
-	public func generateAsset(_ asset: ImageAsset, at path: String, _ resourcesPath: String) {
+	func generateAsset(_ asset: ImageAsset, at path: String, _ resourcesPath: String) {
 		let assetPath = "\(path / asset.name).imageset"
 		saveContentsJSON(asset.contentsJSON, path: assetPath)
 		copyResources(for: asset, in: assetPath, at: resourcesPath)
 	}
 
-	public func generate(at outputPath: String, lookupAt resourcesPath: String) {
+	func generate(at outputPath: String, lookupAt resourcesPath: String) {
 		containers.forEach { container in
 			let containerName = FileUtils.xcassetsFileName(from: container.name)
 			let containerPath = outputPath / containerName
@@ -43,7 +43,7 @@ public struct AssetsGenerator {
 
 			// generate swift code
 			let fileName = FileUtils.swiftFileName(from: container.name)
-			FileUtils.save(contents: container.swiftCode, inPath: outputPath / fileName)
+			FileUtils.save(contents: container.swiftCode.raw, inPath: outputPath / fileName)
 		}
 	}
 }

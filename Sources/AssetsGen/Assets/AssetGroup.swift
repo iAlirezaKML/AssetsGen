@@ -1,11 +1,11 @@
 import Foundation
 
-public class AssetGroup: Codable {
+class AssetGroup: Codable {
 	private let _hasNamespace: Bool?
-	public let name: String
-	public let assets: [ImageAsset]
+	let name: String
+	let assets: [ImageAsset]
 
-	public var hasNamespace: Bool {
+	var hasNamespace: Bool {
 		_hasNamespace ?? true
 	}
 
@@ -15,19 +15,26 @@ public class AssetGroup: Codable {
 		case assets
 	}
 
-	public lazy var contentsJSON: ContentsJSON = ContentsJSON(
+	lazy var contentsJSON: ContentsJSON = ContentsJSON(
 		properties: ContentsJSON.Properties(providesNamespace: hasNamespace)
 	)
 
-	public var swiftCode: LocalizedStringSwiftCode {
+	var swiftCode: SwiftCode {
 		let name = self.name.capitalized
 		let codes = assets
-			.map { $0.swiftCode(namespace: name) }
-			.joined(separator: "\n")
-		return """
-		public enum \(name) {
-		\(codes)
-		}
-		"""
+			.flatMap { $0.swiftCode(namespace: name) }
+//			.joined(separator: "\n")
+		return [
+			.enum(
+				name: name,
+				content: codes
+			),
+		]
+
+//		return """
+//		public enum \(name) {
+//		\(codes)
+//		}
+//		"""
 	}
 }

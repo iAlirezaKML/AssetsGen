@@ -8,14 +8,14 @@ import Foundation
 
 import SwiftFormat
 
-public struct SwiftFormatter {
+struct SwiftFormatter {
 	private static var stderr = FileHandle.standardError
 
 	private static let stderrIsTTY = isatty(STDERR_FILENO) != 0
 
 	private static let printQueue = DispatchQueue(label: "swiftformat.print")
 
-	public static func setup() {
+	static func setup() {
 		CLI.print = { message, type in
 			printQueue.sync {
 				switch type {
@@ -36,7 +36,7 @@ public struct SwiftFormatter {
 		}
 	}
 
-	public static func format(_ path: String) {
+	static func format(_ path: String) {
 		let swiftformat = """
 		# format options
 		--indent tabs

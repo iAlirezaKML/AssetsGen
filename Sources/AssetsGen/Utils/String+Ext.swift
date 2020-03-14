@@ -3,23 +3,23 @@ import Foundation
 private let badChars = CharacterSet.alphanumerics.inverted
 
 extension String {
-	public var escapedQuotes: Self {
+	var escapedQuotes: Self {
 		replacingOccurrences(of: "\\\"", with: "\"")
 	}
 
-	public var unescapedQuotes: Self {
+	var unescapedQuotes: Self {
 		replacingOccurrences(of: "\"", with: #"\""#)
 	}
 
-	public var uppercasingFirst: String {
+	var uppercasingFirst: String {
 		prefix(1).uppercased() + dropFirst()
 	}
 
-	public var lowercasingFirst: String {
+	var lowercasingFirst: String {
 		prefix(1).lowercased() + dropFirst()
 	}
 
-	public var camelCased: String {
+	var camelCased: String {
 		guard !isEmpty else {
 			return ""
 		}
@@ -33,12 +33,12 @@ extension String {
 	}
 }
 
-public func / (lhs: String, rhs: String) -> String {
+func / (lhs: String, rhs: String) -> String {
 	let char = !lhs.isEmpty && !rhs.isEmpty ? "/" : ""
 	return "\(lhs)\(char)\(rhs)"
 }
 
-public func - (lhs: String, rhs: String) -> String {
+func - (lhs: String, rhs: String) -> String {
 	let char = !lhs.isEmpty && !rhs.isEmpty ? "-" : ""
 	return "\(lhs)\(char)\(rhs)"
 }

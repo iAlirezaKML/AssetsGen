@@ -1,26 +1,37 @@
 import Foundation
 
-public struct AssetsContainer: Codable {
-	public let name: String
-	public let groups: [AssetGroup]
-	public let assets: [ImageAsset]
+struct AssetsContainer: Codable {
+	let name: String
+	let groups: [AssetGroup]
+	let assets: [ImageAsset]
 
-	public let contentsJSON = ContentsJSON()
+	let contentsJSON = ContentsJSON()
 
-	public var swiftCode: LocalizedStringSwiftCode {
+	var swiftCode: SwiftCode {
 		let groupsSwiftCodes = groups
-			.map { $0.swiftCode }
-			.joined(separator: "\n")
+			.flatMap { $0.swiftCode }
+//			.joined(separator: "\n")
 		let assetsSwiftCodes = assets
-			.map { $0.swiftCode(namespace: nil) }
-			.joined(separator: "\n")
-		return """
-		import UIKit
-		
-		public enum \(name) {
-		\(groupsSwiftCodes)
-		\(assetsSwiftCodes)
-		}
-		"""
+			.flatMap { $0.swiftCode(namespace: nil) }
+//			.joined(separator: "\n")
+		return [
+			.import("UIKit"),
+			.newline,
+			.enum(
+				name: name,
+				content: [
+					groupsSwiftCodes,
+					assetsSwiftCodes,
+				].flatMap { $0 }
+			),
+		]
+//		return """
+//		import UIKit
+//
+//		public enum \(name) {
+//		\(groupsSwiftCodes)
+//		\(assetsSwiftCodes)
+//		}
+//		"""
 	}
 }

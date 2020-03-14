@@ -1,15 +1,15 @@
 import Foundation
 
-public class ImageAsset: Codable {
-	public enum AssetType: String, Codable {
+class ImageAsset: Codable {
+	enum AssetType: String, Codable {
 		case single
 		case set
 	}
 
-	public struct Attributes: Codable {
-		public let languageDirection: ContentsJSON.Image.LanguageDirection?
+	struct Attributes: Codable {
+		let languageDirection: ContentsJSON.Image.LanguageDirection?
 
-		public init(
+		init(
 			languageDirection: ContentsJSON.Image.LanguageDirection?
 		) {
 			self.languageDirection = languageDirection
@@ -22,15 +22,15 @@ public class ImageAsset: Codable {
 
 	private let _type: AssetType?
 	private let _isVector: Bool?
-	public let name: String
-	public let filename: String
-	public let attributes: Attributes?
+	let name: String
+	let filename: String
+	let attributes: Attributes?
 
-	public var type: AssetType {
+	var type: AssetType {
 		_type ?? .single
 	}
 
-	public var isVector: Bool {
+	var isVector: Bool {
 		_isVector ?? true
 	}
 
@@ -88,7 +88,7 @@ public class ImageAsset: Codable {
 		}
 	}
 
-	public lazy var contentsJSON: ContentsJSON = {
+	lazy var contentsJSON: ContentsJSON = {
 		_calculateIfNeeded()
 		return ContentsJSON(
 			images: _imgs,
@@ -96,12 +96,12 @@ public class ImageAsset: Codable {
 		)
 	}()
 
-	public lazy var resourcePaths: [String] = {
+	lazy var resourcePaths: [String] = {
 		_calculateIfNeeded()
 		return _res ?? []
 	}()
 
-	public func swiftCode(namespace: String?) -> LocalizedStringSwiftCode {
+	func swiftCode(namespace: String?) -> SwiftCode {
 		let prefix: String
 		if let namespace = namespace, !namespace.isEmpty {
 			prefix = "\(namespace)/"
@@ -110,10 +110,11 @@ public class ImageAsset: Codable {
 		}
 		let imageName = "\(prefix)\(name)"
 		let funcName = name.camelCased
-		return """
-		public static func \(funcName)() -> UIImage? {
-		return UIImage(named: "\(imageName)")
-		}
-		"""
+		return [
+			.funcReturnUIImage(
+				name: funcName,
+				imageName: imageName
+			),
+		]
 	}
 }

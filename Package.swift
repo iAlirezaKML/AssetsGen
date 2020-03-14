@@ -14,11 +14,12 @@ let package = Package(
 	dependencies: [
 		.package(url: "https://github.com/apple/swift-package-manager.git", from: "0.1.0"),
 		.package(url: "https://github.com/nicklockwood/SwiftFormat.git", from: "0.44.0"),
+		.package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.9.0"),
 	],
 	targets: [
 		.target(
 			name: "AssetsGen",
-			dependencies: ["SPMUtility", "SwiftFormat"]
+			dependencies: ["SPMUtility", "SwiftFormat", "XMLCoder"]
 		),
 	]
 )

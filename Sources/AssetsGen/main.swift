@@ -64,12 +64,24 @@ do {
 	SwiftFormatter.setup()
 	FileUtils.remove(atPath: outputPath)
 
+	print("Genrating seed json...")
+	let parser = AndroidXMLParser(langs: ["en", "ar"], inputPath: inputPath)
+	parser.parse(outputPath: outputPath)
+	print("Seed json generated successfully!")
+
 	print("Genrating strings...")
-	let stringGen = LocalizedStringsGenerator(inputPath: "\(inputPath)/\(stringSourceName)")
+	let stringGen = StringsGenerator(inputPath: "\(inputPath)/\(stringSourceName)")
 	stringGen?.generate(at: outputPath)
 	stringGen?.xmlDocument(at: outputPath)
-	stringGen?.generateTranslationSources(basedOn: "en", outputPath: outputPath)
 	print("Strings generated successfully!")
+
+	if let stringGen = stringGen {
+		print("Genrating translation...")
+		let convertor = XLIFFConverter(generator: stringGen)
+		convertor.parse(inputPath: "\(inputPath)/ar.xliff", outputPath: outputPath)
+		convertor.generate(basedOn: "en", filterExisting: true, outputPath: outputPath)
+		print("Translation generated successfully!")
+	}
 
 	print("Genrating assets...")
 	let assetGen = AssetsGenerator(inputPath: "\(inputPath)/\(assetSourceName)")
