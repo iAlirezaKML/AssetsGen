@@ -41,8 +41,6 @@ struct FileUtils {
 		if !FileManager.default.createFile(
 			atPath: path,
 			contents: contents.data(using: .utf8)
-			//			,
-			//			attributes: [.immutable: true]
 		) {
 			print("Saving file at path \(path) failed")
 		}
