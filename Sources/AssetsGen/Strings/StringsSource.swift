@@ -297,23 +297,70 @@ class StringsSource: Codable {
 		}
 	}
 
-	func generateSwiftCode(for name: String, at outputPath: String) {
+	func generateSwiftCode(at outputPath: String) {
 		guard let codeName = codeName else { return }
-		let fileName = FileUtils.swiftFileName(from: name)
 		FileUtils.save(
 			contents: swiftCode(for: codeName).raw,
-			inPath: outputPath / fileName
+			inPath: outputPath / FileUtils.swiftFileName(from: fileName)
 		)
 	}
 
-	func generateXMLFile(at outputPath: String) {
+	func generateXMLFile(at outputPath: String, baseLang: LanguageKey) {
 		langs.forEach { lang in
 			let content = xml(for: lang)
-			let fileName = "res/\("values" - lang.langValue)/strings.xml"
+			let langKey = lang == baseLang ? "" : lang.langValue
 			let contents = content
 				.xmlString(options: .nodePrettyPrint)
 				.trimmingCharacters(in: .whitespacesAndNewlines)
-			FileUtils.save(contents: contents, inPath: outputPath / fileName)
+			FileUtils.save(
+				contents: contents,
+				inPath: outputPath / fileName / "res" / ("values" - langKey) / "strings.xml"
+			)
 		}
+	}
+
+	func xliffFile(
+		sourceLang: LanguageKey,
+		targetLang: LanguageKey,
+		projectName: String,
+		filterExisting: Bool
+	) -> XLIFF.File? {
+		let sourceContents = localized(for: sourceLang)
+		let targetContents = localized(for: targetLang)
+		let sourceKeys = sourceContents.map { $0.key }
+		let targetKeys = targetContents.map { $0.key }
+
+		let keys = filterExisting ?
+			sourceKeys.filter { !targetKeys.contains($0) } :
+			sourceKeys
+
+		guard !keys.isEmpty else {
+			return nil
+		}
+
+		return XLIFF.File(
+			original: projectName / "\(sourceLang.langValue).lproj" / fileName,
+			sourceLanguage: sourceLang,
+			targetLanguage: targetLang,
+			body: XLIFF.File.Body(
+				transUnits: keys.compactMap { key in
+					guard
+						let source = sourceContents.first(where: { $0.key == key })
+					else { return nil }
+					return XLIFF.File.Body.TransUnit(
+						id: key,
+						source: source.value,
+						target: targetContents.first(where: { $0.key == key })?.value,
+						note: source.comment
+					)
+				}
+			)
+		)
+	}
+}
+
+extension Array where Element == StringsSource {
+	init(inputPath: String, files: [String]) {
+		self = files.compactMap { FileUtils.value(atPath: inputPath / $0) }
 	}
 }

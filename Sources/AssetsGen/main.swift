@@ -118,11 +118,12 @@ class Command {
 	let filesArg: OptionArgument<String>
 	let sourcesArg: OptionArgument<String>
 	let langsArg: OptionArgument<String>
-	let translationBaseLangArg: OptionArgument<String>
-	let translationFilteredArg: OptionArgument<Bool>
+	let baseLangArg: OptionArgument<String>
+	let filterKeysArg: OptionArgument<Bool>
 	let osArg: OptionArgument<String>
 	let codeGenerationArg: OptionArgument<Bool>
 	let codeFormatArg: OptionArgument<Bool>
+	let cleanupArg: OptionArgument<Bool>
 
 	init() throws {
 		var arguments = ProcessInfo.processInfo.arguments.dropFirst()
@@ -182,16 +183,16 @@ class Command {
 			usage: "eg. --sources en,ar"
 		)
 
-		translationBaseLangArg = parser.add(
-			option: "--trans-base-lang",
+		baseLangArg = parser.add(
+			option: "--base-lang",
 			kind: String.self,
-			usage: "eg. --trans-base-lang en"
+			usage: "eg. --base-lang en"
 		)
 
-		translationFilteredArg = parser.add(
-			option: "--trans-filtered",
+		filterKeysArg = parser.add(
+			option: "--filter-keys",
 			kind: Bool.self,
-			usage: "eg. --trans-filtered"
+			usage: "eg. --filter-keys"
 		)
 
 		osArg = parser.add(
@@ -211,49 +212,117 @@ class Command {
 			kind: Bool.self,
 			usage: "eg. --format-code"
 		)
+
+		cleanupArg = parser.add(
+			option: "--cleanup",
+			kind: Bool.self,
+			usage: "eg. --cleanup [defaults to true]"
+		)
 	}
 
 	func run() throws {
 		let args = try parser.parse(arguments)
+
+		let inputPath = args.get(inputPathArg)
+		let outputPath = args.get(outputPathArg)
+		let sourcesPath = args.get(sourcesPathArg)
+		let projectName = args.get(projectNameArg)
+		let files = args.get(filesArg)?
+			.split(separator: ",")
+			.map(String.init)
+		let sources = args.get(sourcesArg)?
+			.split(separator: ",")
+			.map(String.init)
+		let filterKeys = args.get(filterKeysArg) ?? false
+		let os = args.get(osArg)
+		let langs = args.get(langsArg)?
+			.split(separator: ",")
+			.map(String.init)
+			.map(LanguageKey.init)
+			?? []
+		let baseLang = LanguageKey(stringLiteral: args.get(baseLangArg) ?? "en")
+		let codeGeneration = args.get(codeGenerationArg) ?? false
+		let codeFormat = args.get(codeFormatArg) ?? false
+		let cleanup = args.get(cleanupArg) ?? true
+
+		if cleanup, let path = outputPath {
+			self.cleanup(path: path)
+		}
+
 		switch name.lowercased() {
 		case "gen-str":
-			guard let inputPath = args.get(inputPathArg) else {
+			guard let inputPath = inputPath else {
 				throw CommandError.missingInputPath
 			}
-			guard let outputPath = args.get(outputPathArg) else {
+			guard let outputPath = outputPath else {
 				throw CommandError.missingOutputPath
 			}
-			guard let projectName = args.get(projectNameArg) else {
+			guard let projectName = projectName else {
 				throw CommandError.missingProjectName
 			}
-			guard let files = args.get(filesArg)?
-				.split(separator: ",")
-				.map(String.init)
-			else {
+			guard let files = files else {
 				throw CommandError.missingFiles
 			}
-			guard let os = args.get(osArg) else {
+			guard let os = os else {
 				throw CommandError.missingOS
 			}
-			let translationBaseLang = args.get(translationBaseLangArg) ?? "en"
-			let translationFiltered = args.get(translationFilteredArg) ?? false
-			let codeGeneration = args.get(codeGenerationArg) ?? false
-			let codeFormat = args.get(codeFormatArg) ?? false
-
 			generateStrings(
 				inputPath: inputPath,
 				outputPath: outputPath,
 				projectName: projectName,
 				files: files,
-				translationBaseLang: LanguageKey(stringLiteral: translationBaseLang),
-				translationFiltered: translationFiltered,
+				baseLang: baseLang,
 				os: OS(stringLiteral: os),
-				codeGeneration: codeGeneration,
-				codeFormat: codeFormat
+				codeGeneration: codeGeneration
+			)
+
+		case "gen-trans":
+			guard let inputPath = inputPath else {
+				throw CommandError.missingInputPath
+			}
+			guard let outputPath = outputPath else {
+				throw CommandError.missingOutputPath
+			}
+			guard let projectName = projectName else {
+				throw CommandError.missingProjectName
+			}
+			guard let files = files else {
+				throw CommandError.missingFiles
+			}
+			generateTranslations(
+				inputPath: inputPath,
+				outputPath: outputPath,
+				projectName: projectName,
+				files: files,
+				baseLang: baseLang,
+				langs: langs,
+				filterKeys: filterKeys
+			)
+
+		case "parse-trans":
+			guard let inputPath = inputPath else {
+				throw CommandError.missingInputPath
+			}
+			guard let outputPath = outputPath else {
+				throw CommandError.missingOutputPath
+			}
+			guard let files = files else {
+				throw CommandError.missingFiles
+			}
+			parseTranslations(
+				inputPath: inputPath,
+				outputPath: outputPath,
+				files: files,
+				sourcesPath: sourcesPath,
+				sources: sources
 			)
 
 		default:
 			throw CommandError.badCommand(name)
+		}
+
+		if codeGeneration, codeFormat, let path = outputPath {
+			self.codeFormat(path: path)
 		}
 	}
 
@@ -262,31 +331,66 @@ class Command {
 		outputPath: String,
 		projectName: String,
 		files: [String],
-		translationBaseLang _: LanguageKey?,
-		translationFiltered _: Bool?,
+		baseLang: LanguageKey,
 		os: OS,
-		codeGeneration: Bool,
-		codeFormat: Bool
+		codeGeneration: Bool
 	) {
-//		let cleanup = false
-//		if cleanup {
-		cleanup(path: outputPath)
-//		}
 		print("Genrating strings...")
-		let stringGen = StringsGenerator(
+		let generator = StringsGenerator(
 			projectName: projectName,
-			inputPath: inputPath,
-			files: files
+			sources: .init(inputPath: inputPath, files: files)
 		)
-		stringGen.generate(
+		generator.generate(
+			baseLang: baseLang,
 			os: os,
 			codeGen: codeGeneration,
 			path: outputPath
 		)
 		print("Strings generated successfully!")
-		if codeGeneration, codeFormat {
-			self.codeFormat(path: outputPath)
-		}
+	}
+
+	func generateTranslations(
+		inputPath: String,
+		outputPath: String,
+		projectName: String,
+		files: [String],
+		baseLang: LanguageKey,
+		langs: [LanguageKey],
+		filterKeys: Bool
+	) {
+		print("Genrating translations...")
+		let generator = XLIFFGenerator(
+			projectName: projectName,
+			sources: .init(inputPath: inputPath, files: files)
+		)
+		generator.generate(
+			baseLang: baseLang,
+			targetLangs: langs,
+			filterExisting: filterKeys,
+			outputPath: outputPath
+		)
+		print("Translations generated successfully!")
+	}
+
+	func parseTranslations(
+		inputPath: String,
+		outputPath: String,
+		files: [String],
+		sourcesPath: String?,
+		sources: [String]?
+	) {
+		print("Parsing translations...")
+		let sources: [StringsSource] = .init(
+			inputPath: sourcesPath ?? "",
+			files: sources ?? []
+		)
+		let parser = XLIFFParser(sources: sources)
+		parser.parse(
+			inputPath: inputPath,
+			files: files,
+			outputPath: outputPath
+		)
+		print("Translations parsed successfully!")
 	}
 
 	func cleanup(path: String) {

@@ -4,20 +4,20 @@ struct StringsGenerator {
 	let projectName: String
 	let sources: [StringsSource]
 
-	init(projectName: String, inputPath: String, files: [String]) {
+	init(projectName: String, sources: [StringsSource]) {
 		self.projectName = projectName
-		sources = files.compactMap { FileUtils.value(atPath: inputPath / $0) }
+		self.sources = sources
 	}
 
-	func generate(os: OS, codeGen: Bool, path: String) {
+	func generate(baseLang: LanguageKey, os: OS, codeGen: Bool, path: String) {
 		sources.forEach { source in
 			switch os {
 			case .android:
-				source.generateXMLFile(at: path)
+				source.generateXMLFile(at: path, baseLang: baseLang)
 			case .iOS:
 				source.generateStringsFile(at: path)
 				if codeGen {
-					source.generateSwiftCode(for: source.fileName, at: path)
+					source.generateSwiftCode(at: path)
 				}
 			}
 		}
