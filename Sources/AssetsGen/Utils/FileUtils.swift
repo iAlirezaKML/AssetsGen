@@ -48,7 +48,7 @@ struct FileUtils {
 		}
 	}
 
-	static func save<T: Encodable>(_ encodable: T, inPath path: String) {
+	static func saveJSON<T: Encodable>(_ encodable: T, inPath path: String) {
 		let encoder = JSONEncoder()
 		encoder.outputFormatting = .prettyPrinted
 		do {

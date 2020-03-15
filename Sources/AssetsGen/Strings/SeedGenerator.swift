@@ -1,16 +1,13 @@
 import Foundation
 import XMLCoder
 
-class AndroidXMLParser {
-	private(set) var strings: [StringsSource.StringItem]
+class SeedGenerator {
+	private(set) var strings: [StringsSource.StringItem] = []
 
 	init(
-		strings: [StringsSource.StringItem] = [],
-		langs: [LanguageKey],
-		inputPath: String
+		inputPath: String,
+		langs: [LanguageKey]
 	) {
-		self.strings = strings
-
 		do {
 			let decoder = XMLDecoder()
 			let xmls = try langs.map { lang in
@@ -35,9 +32,9 @@ class AndroidXMLParser {
 		}
 	}
 
-	func parse(outputPath: String) {
-		let fileName = "seed.json"
-		FileUtils.save(strings, inPath: outputPath / fileName)
+	func generateSeed(path outputPath: String) {
+		let fileName = "seed.strings.json"
+		FileUtils.saveJSON(strings, inPath: outputPath / fileName)
 	}
 
 	func parse(lang: LanguageKey, xml: AndroidXML) {

@@ -17,7 +17,7 @@ struct XLIFFParser {
 					let xliff = try XMLDecoder().decode(XLIFF.self, from: data)
 					let sources = parse(xliff: xliff)
 					sources.forEach { source in
-						FileUtils.save(source, inPath: outputPath / "\(source.fileName).json")
+						FileUtils.saveJSON(source, inPath: outputPath / "\(source.fileName).json")
 					}
 				} catch {
 					print(error)

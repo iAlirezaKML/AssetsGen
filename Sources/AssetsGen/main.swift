@@ -1,100 +1,6 @@
 import Foundation
 import SPMUtility
 
-// let arguments = ProcessInfo.processInfo.arguments.dropFirst()
-//
-// let parser = ArgumentParser(
-//	usage: "<options>",
-//	overview: """
-//	A Swift command-line tool to generate localized strings and xcassets with corresponding swift code based on json input
-//	"""
-// )
-//
-// let lookupArgument = parser.add(
-//	option: "--lookup",
-//	shortName: "-l",
-//	kind: String.self,
-//	usage: "The parent folder of input/output folders - default: ."
-// )
-//
-// let inputArgument = parser.add(
-//	option: "--input",
-//	shortName: "-i",
-//	kind: String.self,
-//	usage: "The folder contains input files and resources - default: ${lookup}/input"
-// )
-//
-// let stringSourceArgument = parser.add(
-//	option: "--string-source",
-//	shortName: "-s",
-//	kind: String.self,
-//	usage: "The name of the json file source for strings - default: \"stringSource.json\""
-// )
-//
-// let assetSourceArgument = parser.add(
-//	option: "--asset-source",
-//	shortName: "-a",
-//	kind: String.self,
-//	usage: "The name of the json file source for assets - default: \"assetSource.json\""
-// )
-//
-// let reourcesArgument = parser.add(
-//	option: "--resources-path",
-//	shortName: "-r",
-//	kind: String.self,
-//	usage: "The folder containing all resources to generate assets - default: ${input}/resources"
-// )
-//
-// let outputArgument = parser.add(
-//	option: "--output",
-//	shortName: "-o",
-//	kind: String.self,
-//	usage: "The folder all generated files will be stored in - default: ${lookup}/output"
-// )
-
-// do {
-//	let parsedArgs = try parser.parse(Array(arguments))
-//	let lookupPath = parsedArgs.get(lookupArgument) ?? "."
-//	let inputPath = parsedArgs.get(inputArgument) ?? "\(lookupPath)/input"
-//	let stringSourceName = parsedArgs.get(stringSourceArgument) ?? "stringSource.json"
-//	let assetSourceName = parsedArgs.get(assetSourceArgument) ?? "assetSource.json"
-//	let resourcesPath = parsedArgs.get(reourcesArgument) ?? "\(inputPath)/resources"
-//	let outputPath = parsedArgs.get(outputArgument) ?? "\(lookupPath)/output"
-//
-//	SwiftFormatter.setup()
-//	FileUtils.remove(atPath: outputPath)
-//
-//	print("Genrating seed json...")
-//	let parser = AndroidXMLParser(langs: ["en", "ar"], inputPath: inputPath)
-//	parser.parse(outputPath: outputPath)
-//	print("Seed json generated successfully!")
-//
-//	print("Genrating strings...")
-//	let stringGen = StringGenerator(inputPath: "\(inputPath)/\(stringSourceName)")
-//	stringGen?.generate(at: outputPath)
-//	stringGen?.xmlDocument(at: outputPath)
-//	print("Strings generated successfully!")
-//
-//	if let stringGen = stringGen {
-//		print("Genrating translation...")
-//		let convertor = XLIFFConverter(generator: stringGen)
-//		convertor.parse(inputPath: "\(inputPath)/ar.xliff", outputPath: outputPath)
-//		convertor.generate(basedOn: "en", filterExisting: true, outputPath: outputPath)
-//		print("Translation generated successfully!")
-//	}
-//
-//	print("Genrating assets...")
-//	let assetGen = AssetsGenerator(inputPath: "\(inputPath)/\(assetSourceName)")
-//	assetGen?.generate(at: outputPath, lookupAt: resourcesPath)
-//	print("Assets generated successfully!")
-//
-//	print("Start formatting...")
-//	SwiftFormatter.format(outputPath)
-//	print("Finished formatting!")
-// } catch {
-//	print("Failed with \(error)")
-// }
-
 enum CommandError: Error {
 	case noCommands
 	case badCommand(String)
@@ -317,6 +223,19 @@ class Command {
 				sources: sources
 			)
 
+		case "seed-str":
+			guard let inputPath = inputPath else {
+				throw CommandError.missingInputPath
+			}
+			guard let outputPath = outputPath else {
+				throw CommandError.missingOutputPath
+			}
+			generateSeedStrings(
+				inputPath: inputPath,
+				outputPath: outputPath,
+				langs: langs
+			)
+
 		default:
 			throw CommandError.badCommand(name)
 		}
@@ -393,6 +312,17 @@ class Command {
 		print("Translations parsed successfully!")
 	}
 
+	func generateSeedStrings(
+		inputPath: String,
+		outputPath: String,
+		langs: [LanguageKey]
+	) {
+		print("Generating seed strings...")
+		let generator = SeedGenerator(inputPath: inputPath, langs: langs)
+		generator.generateSeed(path: outputPath)
+		print("Seed strings generated successfully!")
+	}
+
 	func cleanup(path: String) {
 		print("Cleaning output...")
 		FileUtils.remove(atPath: path)
@@ -406,39 +336,6 @@ class Command {
 		print("Finished formatting!")
 	}
 }
-
-// enum Command {
-//	case generateStrings(
-//		inputPath: String,
-//		outputPath: String,
-//		projectName: String,
-//		files: [String],
-//		translationBaseLang: LanguageKey?,
-//		translationFiltered: Bool?,
-//		os: OS,
-//		codeGeneration: Bool,
-//		codeFormat: Bool
-//	)
-//	case parseTranslations(
-//		inputPath: String,
-//		outputPath: String,
-//		files: [String],
-//		sourcesPath: String,
-//		sources: [String],
-//		translationBaseLang: LanguageKey
-//	)
-//	case seedStrings(
-//		inputPath: String,
-//		outputPath: String,
-//		langs: [LanguageKey]
-//	)
-//	case generateImages(
-//		inputPath: String,
-//		outputPath: String,
-//		codeGeneration: Bool,
-//		codeFormat: Bool
-//	)
-// }
 
 do {
 	let command = try Command()
