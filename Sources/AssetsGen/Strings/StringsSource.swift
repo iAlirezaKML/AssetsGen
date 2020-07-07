@@ -111,7 +111,7 @@ class StringsSource: Codable {
 					let element = XMLElement(name: "string")
 					if type == .attributed {
 						let content = XMLElement(kind: .text, options: [.nodeNeverEscapeContents, .nodePreserveAll])
-						content.setStringValue(string, resolvingEntities: true)
+						content.setStringValue(string, resolvingEntities: false)
 						element.setChildren([content])
 					} else {
 						element.setStringValue(string, resolvingEntities: true)
