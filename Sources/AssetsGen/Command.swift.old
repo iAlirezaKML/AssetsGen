@@ -7,6 +7,8 @@ enum CommandError: Error {
 	case missingResourcesPath
 	case missingInputPath
 	case missingOutputPath
+	case missingSourcesPath
+	case missingSource
 	case missingProjectName
 	case missingFiles
 	case missingOS
@@ -249,6 +251,27 @@ class Command {
 				sources: sources
 			)
 
+		case "parse-xml":
+			guard let inputPath = inputPath else {
+				throw CommandError.missingInputPath
+			}
+			guard let outputPath = outputPath else {
+				throw CommandError.missingOutputPath
+			}
+			guard let sourcesPath = sourcesPath else {
+				throw CommandError.missingSourcesPath
+			}
+			guard let source = sources?.first else {
+				throw CommandError.missingSource
+			}
+			parseXMLStrings(
+				inputPath: inputPath,
+				outputPath: outputPath,
+				sourcesPath: sourcesPath,
+				langs: langs,
+				source: source
+			)
+			
 		case "seed-str":
 			guard let inputPath = inputPath else {
 				throw CommandError.missingInputPath
@@ -363,6 +386,27 @@ class Command {
 		let generator = SeedGenerator(inputPath: inputPath, langs: langs)
 		generator.generateSeed(path: outputPath)
 		print("Seed strings generated successfully!")
+	}
+
+	func parseXMLStrings(
+		inputPath: String,
+		outputPath: String,
+		sourcesPath: String,
+		langs: [LanguageKey],
+		source: String
+	) {
+		print("Parsing xml strings...")
+		let generator = SeedGenerator(inputPath: inputPath, langs: langs)
+		let generated = generator.strings
+		let sources: [StringsSource] = .init(
+			inputPath: sourcesPath,
+			files: [source]
+		)
+		let existing = sources.first?.strings ?? []
+		print("Updated keys")
+		let updatedKeys = diff(old: existing, new: generated)
+		print(updatedKeys)
+		print("Parsed xml strings generated successfully!")
 	}
 
 	func cleanup(path: String) {
