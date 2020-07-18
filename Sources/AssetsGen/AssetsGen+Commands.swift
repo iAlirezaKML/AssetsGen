@@ -2,6 +2,12 @@ import ArgumentParser
 import DeepDiff
 import Foundation
 
+struct Configs {
+	fileprivate(set) static var outputPath: String!
+	fileprivate(set) static var baseLang: LanguageKey!
+	fileprivate(set) static var os: OS!
+}
+
 extension AssetsGen {
 	struct Options: ParsableArguments {
 		@Flag(
@@ -92,12 +98,16 @@ extension AssetsGen {
 		required init() {}
 		
 		func run() throws {
+			Configs.outputPath = options.outputPath
+			Configs.baseLang = options.baseLangValue
+			Configs.os = options.osValue
+			
 			if !options.noCleanup {
 				print("Cleaning output...")
 				FileUtils.remove(atPath: options.outputPath)
 				print("Finished cleaning!")
 			}
-
+			
 			runCommand()
 			
 			if options.codeGeneration, options.codeFormat {
@@ -184,12 +194,71 @@ extension AssetsGen {
 	final class GenerateSeedStrings: DefaultCommand {
 		override func runCommand() {
 			print("Generating seed strings...")
-			let generator = SeedGenerator(
+			let projectName = options.projectName.llamaCased
+			let generator = XMLStringParser(
 				inputPath: options.inputPath,
+				expectedPostfix: "\(.*projectName).seed.xml",
 				langs: options.langsValue
 			)
-			generator.generateSeed(path: options.outputPath)
+			generator.generateSeed(
+				path: options.outputPath,
+				projectName: projectName
+			)
 			print("Seed strings generated successfully!")
+		}
+	}
+	
+	final class ParseXMLStrings: DefaultCommand {
+		override func runCommand() {
+			print("Parsing xml strings...")
+			let projectName = options.projectName.llamaCased
+			let generator = XMLStringParser(
+				inputPath: options.inputPath,
+				expectedPostfix: "\(.*projectName).xml",
+				langs: options.langsValue
+			)
+			let sourceFile = options.sourcesValue.first ?? ""
+			let sources: [StringsSource] = .init(
+				inputPath: options.sourcesPath,
+				files: [sourceFile]
+			)
+			guard let source = sources.first else {
+				print("Source not found.")
+				return
+			}
+			let changes = diff(old: source.strings, new: generator.strings)
+			let replaces = changes.compactMap { $0.replace }
+			let inserts = changes.compactMap { $0.insert }
+			let deletes = changes.compactMap { $0.delete }
+			let moves = changes.compactMap { $0.move }
+			ParseReplacesFile.shared.write(replaces)
+			ParseInsertsFile.shared.write(inserts)
+			ParseDeletesFile.shared.write(deletes)
+			ParseMovesFile.shared.write(moves)
+			var newStrings = source.strings
+			replaces.forEach { replace in
+				if let index = newStrings.firstIndex(where: { $0.key == replace.newItem.key }),
+					let value = replace.newItem.value(for: Configs.baseLang, with: Configs.os) {
+					let newString = newStrings[index]
+					newString.resetValues(to: value, for: Configs.baseLang)
+					print(newString.values)
+					newStrings[index] = newString
+				}
+			}
+			deletes.forEach { delete in
+				if let index = newStrings.firstIndex(where: { $0.key == delete.item.key }) {
+					newStrings.remove(at: index)
+				}
+			}
+			inserts.forEach { insert in
+				newStrings.insert(insert.item, at: insert.index)
+			}
+			moves.forEach({ move in
+				newStrings[move.toIndex] = move.item
+			})
+			let fileName = "\(projectName).strings.json".replacingOccurrences(of: "..", with: ".")
+			FileUtils.saveJSON(newStrings, inPath: options.outputPath / fileName)
+			print("Parsed xml strings successfully!")
 		}
 	}
 }

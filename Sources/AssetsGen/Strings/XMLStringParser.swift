@@ -1,20 +1,22 @@
 import Foundation
 import XMLCoder
 
-class SeedGenerator {
+class XMLStringParser {
 	private(set) var strings: [StringsSource.StringItem] = []
 
 	init(
 		inputPath: String,
+		expectedPostfix: String,
 		langs: [LanguageKey]
 	) {
 		do {
 			let decoder = XMLDecoder()
 			let xmls = try langs.map { lang in
-				inputPath / "\(lang.langValue).seed.xml"
+				inputPath / "\(lang.langValue)\(expectedPostfix)"
 			}
-			.map { path in
-				FileUtils.data(atPath: path)
+			.map { path -> Data? in
+				print(path)
+				return FileUtils.data(atPath: path)
 			}
 			.map { data -> AndroidXML? in
 				if let data = data {
@@ -32,8 +34,11 @@ class SeedGenerator {
 		}
 	}
 
-	func generateSeed(path outputPath: String) {
-		let fileName = "seed.strings.json"
+	func generateSeed(
+		path outputPath: String,
+		projectName: String
+	) {
+		let fileName = "seed.\(projectName).strings.json"
 		FileUtils.saveJSON(strings, inPath: outputPath / fileName)
 	}
 

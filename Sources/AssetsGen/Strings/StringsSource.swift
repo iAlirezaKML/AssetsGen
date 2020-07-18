@@ -1,3 +1,4 @@
+import DeepDiff
 import Foundation
 
 class StringsSource: Codable {
@@ -188,6 +189,11 @@ class StringsSource: Codable {
 			_values[key.langValue] = value
 			values = _computeValues()
 		}
+		
+		func resetValues(to value: Value, for key: LanguageKey) {
+			_values = [:]
+			set(value, for: key)
+		}
 
 		func value(for lang: LanguageKey, with osPriority: OS) -> Value? {
 			values[lang.specific(for: osPriority)] ??
@@ -362,5 +368,22 @@ class StringsSource: Codable {
 extension Array where Element == StringsSource {
 	init(inputPath: String, files: [String]) {
 		self = files.compactMap { FileUtils.value(atPath: inputPath / $0) }
+	}
+}
+
+extension StringsSource.StringItem: DiffAware {
+	var diffId: String {
+		key
+	}
+
+	static func compareContent(_ a: StringsSource.StringItem, _ b: StringsSource.StringItem) -> Bool {
+		let isSameValue: Bool
+		if let aValue = a.value(for: Configs.baseLang, with: Configs.os),
+			let bValue = b.value(for: Configs.baseLang, with: Configs.os) {
+			isSameValue = aValue.localizableValue == bValue.localizableValue
+		} else {
+			isSameValue = false
+		}
+		return isSameValue
 	}
 }

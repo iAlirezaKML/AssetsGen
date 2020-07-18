@@ -7,13 +7,14 @@ struct AssetsGen: ParsableCommand {
 	static let configuration = CommandConfiguration(
 		commandName: "assetsGen",
 		abstract: "A Utility to Parse/Generate iOS/Android Assets(Strings/Images)",
-		version: "0.0.2",
+		version: "0.1.0",
 		subcommands: [
 			GenerateImages.self,
 			GenerateStrings.self,
 			GenerateTranslations.self,
 			ParseTranslations.self,
 			GenerateSeedStrings.self,
+			ParseXMLStrings.self,
 		]
 	)
 }

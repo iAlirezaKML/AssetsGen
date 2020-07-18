@@ -33,7 +33,13 @@ struct XLIFFParser {
 				file.body.transUnits.forEach { unit in
 					if let idx = source.strings.firstIndex(where: { $0.key == unit.id }),
 						let value = unit.target {
-						source.strings[idx].set(value, for: file.targetLanguage)
+						let string = source.strings[idx]
+						let sourceValue = string.value(for: file.sourceLanguage, with: Configs.os)?.localizableValue
+						if unit.source == sourceValue {
+							string.set(value, for: file.targetLanguage)
+						} else {
+							ParseXLIFFFile.shared.write(key: string.key, base: sourceValue ?? "", translated: unit.source)
+						}
 					}
 				}
 				sources[idx] = source

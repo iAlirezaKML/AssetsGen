@@ -26,8 +26,8 @@ struct FileUtils {
 			print(error)
 		}
 	}
-
-	static func save(contents: String, inPath path: String) {
+	
+	static func makeSurePathExists(at path: String) {
 		if !FileManager.default.fileExists(atPath: path) {
 			do {
 				let url = URL(fileURLWithPath: path)
@@ -38,6 +38,10 @@ struct FileUtils {
 				print(error)
 			}
 		}
+	}
+
+	static func save(contents: String, inPath path: String) {
+		makeSurePathExists(at: path)
 		if !FileManager.default.createFile(
 			atPath: path,
 			contents: contents.data(using: .utf8)
