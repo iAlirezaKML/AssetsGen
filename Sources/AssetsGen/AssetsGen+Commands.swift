@@ -41,6 +41,9 @@ extension AssetsGen {
 		
 		@Option(help: "Path to save the output")
 		var outputPath: String = ""
+
+		@Option(help: "Path to generate code")
+		var codeOutputPath: String = ""
 		
 		@Option(
 			name: .customLong("proj"),
@@ -147,8 +150,9 @@ extension AssetsGen {
 			generator.generate(
 				baseLang: options.baseLangValue,
 				os: options.osValue,
+				path: options.outputPath,
 				codeGen: options.codeGeneration,
-				path: options.outputPath
+				codePath: options.codeOutputPath
 			)
 			print("Strings generated successfully!")
 		}

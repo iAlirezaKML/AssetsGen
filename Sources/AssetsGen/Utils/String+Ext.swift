@@ -6,11 +6,14 @@ private enum CharacterCasing {
 }
 
 extension Unicode.Scalar {
-	fileprivate var `case`: CharacterCasing {
+	fileprivate var `case`: CharacterCasing? {
 		if CharacterSet.uppercaseLetters.contains(self) {
 			return .upper
+		} else if CharacterSet.lowercaseLetters.contains(self) {
+			return .lower
+		} else {
+			return nil
 		}
-		return .lower
 	}
 }
 
@@ -20,15 +23,21 @@ private enum StringCasing {
 	case snake
 }
 
+private let _underscoreChar = "_"
+private let _underscoreScalar = _underscoreChar.unicodeScalars.first
+
 extension String {
 	private var casingComponents: [String] {
 		var result: [String] = []
 		var buffer = ""
-		let lastIdx = unicodeScalars.count - 1
-		unicodeScalars.enumerated().forEach { idx, char in
+		let sourceStr = self
+		let lastIdx = sourceStr.unicodeScalars.count - 1
+		sourceStr.unicodeScalars.enumerated().forEach { idx, char in
 			let caseSwitched: Bool
-
-			if let last = buffer.unicodeScalars.last {
+			let isUnderscore = char == _underscoreScalar
+			if isUnderscore {
+				caseSwitched = true
+			} else if let last = buffer.unicodeScalars.last {
 				if buffer.unicodeScalars.count == 1, char.case != last.case {
 					caseSwitched = char.case == .upper && last.case == .lower
 				} else {
@@ -39,7 +48,9 @@ extension String {
 			}
 			if caseSwitched {
 				let nextStart: String
-				if buffer.count > 1, let last = buffer.popLast() {
+				if isUnderscore {
+					nextStart = ""
+				} else if buffer.count > 1, let last = buffer.popLast() {
 					nextStart = String(last)
 				} else {
 					nextStart = ""
@@ -47,25 +58,27 @@ extension String {
 				result.append(buffer)
 				buffer = nextStart
 			}
-			buffer += String(char)
+			if !isUnderscore {
+				buffer += String(char)
+			}
 			if idx == lastIdx {
 				result.append(buffer)
 			}
 		}
 		return result
 	}
-
+	
 	private func toCase(_ case: StringCasing) -> String {
 		var comps = casingComponents
 		switch `case` {
 		case .camel:
 			if comps.count > 0 {
-				let first = comps[0]
-				comps[0] = first.uppercased()
+				comps = comps.map({ $0.unicodeScalars.first?.case != .upper ? $0.capitalized : $0 })
 			}
 			return comps.joined()
 		case .llama:
 			if comps.count > 0 {
+				comps = comps.map({ $0.unicodeScalars.first?.case != .upper ? $0.capitalized : $0 })
 				let first = comps[0]
 				comps[0] = first.lowercased()
 			}
@@ -73,7 +86,7 @@ extension String {
 		case .snake:
 			return comps
 				.map { $0.lowercased() }
-				.joined(separator: "_")
+				.joined(separator: _underscoreChar)
 		}
 	}
 

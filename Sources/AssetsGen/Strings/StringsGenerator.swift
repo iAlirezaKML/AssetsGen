@@ -9,7 +9,13 @@ struct StringsGenerator {
 		self.sources = sources
 	}
 
-	func generate(baseLang: LanguageKey, os: OS, codeGen: Bool, path: String) {
+	func generate(
+		baseLang: LanguageKey,
+		os: OS,
+		path: String,
+		codeGen: Bool,
+		codePath: String? = nil
+	) {
 		sources.forEach { source in
 			switch os {
 			case .android:
@@ -17,7 +23,13 @@ struct StringsGenerator {
 			case .iOS:
 				source.generateStringsFile(at: path)
 				if codeGen {
-					source.generateSwiftCode(at: path)
+					let _path: String
+					if let p = codePath, !p.isEmpty {
+						_path = p
+					} else {
+						_path = path
+					}
+					source.generateSwiftCode(at: _path)
 				}
 			}
 		}
