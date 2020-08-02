@@ -139,6 +139,10 @@ extension String {
 	var unescapedQuotes: Self {
 		replacingOccurrences(of: "\"", with: #"\""#)
 	}
+
+	var unescapedNewLine: Self {
+		replacingOccurrences(of: "\n", with: #"\n"#)
+	}
 }
 
 func / (lhs: String, rhs: String) -> String {

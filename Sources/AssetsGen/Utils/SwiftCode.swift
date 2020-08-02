@@ -12,6 +12,7 @@ enum SwiftCodeTemplate {
 	case funcReturnString(
 		name: String,
 		key: String,
+		tableName: String,
 		comment: String,
 		args: String,
 		vars: String
@@ -19,6 +20,7 @@ enum SwiftCodeTemplate {
 	case funcReturnAttributedString(
 		name: String,
 		key: String,
+		tableName: String,
 		comment: String,
 		args: String,
 		vars: String
@@ -26,6 +28,7 @@ enum SwiftCodeTemplate {
 	case funcReturnStringArray(
 		name: String,
 		key: String,
+		tableName: String,
 		comment: String
 	)
 	case funcReturnUIImage(
@@ -45,36 +48,39 @@ enum SwiftCodeTemplate {
 		case let .import(name):
 			return "import \(name)"
 
-		case let .funcReturnString(name, key, comment, args, vars):
+		case let .funcReturnString(name, key, tableName, comment, args, vars):
 			return """
 			public static func \(name)(\(args)) -> String {
 			return String(
 			format: NSLocalizedString(
 			"\(key)",
+			tableName: "\(tableName)",
 			comment: "\(comment)"
 			)\(vars)
 			)
 			}
 			"""
 
-		case let .funcReturnAttributedString(name, key, comment, args, vars):
+		case let .funcReturnAttributedString(name, key, tableName, comment, args, vars):
 			return """
 			public static func \(name)(\(args)) -> NSAttributedString? {
 			return try? ZSWTaggedString(
 			format: NSLocalizedString(
 			"\(key)",
+			tableName: "\(tableName)",
 			comment: "\(comment)"
 			)\(vars)
 			).attributedString()
 			}
 			"""
 
-		case let .funcReturnStringArray(name, key, comment):
+		case let .funcReturnStringArray(name, key, tableName, comment):
 			return """
 			public static func \(name)() -> [String] {
 			return parseItems(
 			NSLocalizedString(
 			"\(key)",
+			tableName: "\(tableName)",
 			comment: "\(comment)"
 			)
 			)

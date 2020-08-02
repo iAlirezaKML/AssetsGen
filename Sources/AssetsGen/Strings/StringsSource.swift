@@ -11,6 +11,7 @@ class StringsSource: Codable {
 			func swiftCode(
 				name: String,
 				key: String,
+				tableName: String = "Localizable.strings",
 				comment: String?,
 				args: String?,
 				vars: String?
@@ -24,6 +25,7 @@ class StringsSource: Codable {
 						.funcReturnString(
 							name: name,
 							key: key,
+							tableName: tableName,
 							comment: comment,
 							args: args,
 							vars: vars
@@ -34,6 +36,7 @@ class StringsSource: Codable {
 						.funcReturnAttributedString(
 							name: name,
 							key: key,
+							tableName: tableName,
 							comment: comment,
 							args: args,
 							vars: vars
@@ -44,6 +47,7 @@ class StringsSource: Codable {
 						.funcReturnStringArray(
 							name: name,
 							key: key,
+							tableName: tableName,
 							comment: comment
 						),
 					]
@@ -134,8 +138,8 @@ class StringsSource: Codable {
 
 			var localizedContent: String {
 				String(
-					format: "/* %@ */\n\"%@\" = \"%@\"",
-					comment, key, value
+					format: "/* %@ */\n\"%@\" = \"%@\";",
+					comment, key, value.unescapedNewLine
 				)
 			}
 		}
@@ -210,10 +214,11 @@ class StringsSource: Codable {
 			)
 		}
 
-		var swiftCode: SwiftCode {
+		func swiftCode(tableName: String) -> SwiftCode {
 			type.swiftCode(
 				name: key.swiftCamelCased,
 				key: key.unescapedQuotes,
+				tableName: tableName,
 				comment: comment?.unescapedQuotes,
 				args: variables?
 					.map { "\($0.name): \($0.type)" }
@@ -281,7 +286,7 @@ class StringsSource: Codable {
 
 	func swiftCode(for name: String) -> SwiftCode {
 		let swiftCodes = strings
-			.flatMap { $0.swiftCode + [.newline] }
+			.flatMap { $0.swiftCode(tableName: fileName) + [.newline] }
 		return [
 			.import("Foundation"),
 			.import("ZSWTaggedStringSwift"),
