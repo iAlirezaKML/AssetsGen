@@ -212,7 +212,7 @@ class StringsSource: Codable {
 
 		var swiftCode: SwiftCode {
 			type.swiftCode(
-				name: key.llamaCased,
+				name: key.swiftCamelCased,
 				key: key.unescapedQuotes,
 				comment: comment?.unescapedQuotes,
 				args: variables?

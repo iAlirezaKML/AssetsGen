@@ -103,6 +103,34 @@ extension String {
 	}
 }
 
+
+private let badChars = CharacterSet.alphanumerics.inverted
+
+extension String {
+	private var uppercasingFirst: String {
+		prefix(1).uppercased() + dropFirst()
+	}
+	
+	private var lowercasingFirst: String {
+		prefix(1).lowercased() + dropFirst()
+	}
+	
+	var swiftCamelCased: String {
+		guard !isEmpty else {
+			return ""
+		}
+		
+		let pre = starts(with: "_") ? "_" : ""
+		let parts = components(separatedBy: badChars)
+		
+		let first = String(describing: parts.first ?? "").lowercasingFirst
+		let rest = parts.dropFirst().map { String($0).uppercasingFirst }
+		
+		return ([pre, first] + rest).joined(separator: "")
+	}
+}
+
+
 extension String {
 	var escapedQuotes: Self {
 		replacingOccurrences(of: "\\\"", with: "\"")
