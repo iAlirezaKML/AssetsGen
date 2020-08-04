@@ -20,6 +20,7 @@ struct AssetsGenerator {
 	}
 
 	func generateAsset(_ asset: ImageAsset, at path: String, _ resourcesPath: String) {
+		guard !asset.codeOnly else { return } // skip if is code only
 		asset.resourcesPath = resourcesPath
 		let assetPath = path / "\(asset.name).imageset"
 		saveContentsJSON(asset.contentsJSON, path: assetPath)
@@ -27,6 +28,7 @@ struct AssetsGenerator {
 	}
 
 	func generateGroup(_ group: AssetGroup, at path: String, _ resourcesPath: String) {
+		guard !group.codeOnly else { return } // skip if is code only
 		let groupPath = path / group.name
 		saveContentsJSON(group.contentsJSON, path: groupPath)
 		group.groups?.forEach { generateGroup($0, at: groupPath, resourcesPath) }
@@ -51,8 +53,7 @@ struct AssetsGenerator {
 
 			if codeGen {
 				// generate swift code
-				print(codePath)
-				let fileName = FileUtils.swiftFileName(from: container.name .+ "images")
+				let fileName = FileUtils.swiftFileName(from: container.name)
 				FileUtils.save(contents: container.swiftCode.raw, inPath: (codePath || outputPath) / fileName)
 			}
 		}

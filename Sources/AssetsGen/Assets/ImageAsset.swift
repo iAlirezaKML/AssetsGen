@@ -1,7 +1,6 @@
 import Foundation
 
 class ImageAsset: Codable {
-
 	enum AssetType: String, Codable {
 		case single
 		case set
@@ -23,6 +22,7 @@ class ImageAsset: Codable {
 
 	private let _type: AssetType?
 	private let _isVector: Bool?
+	private let _codeOnly: Bool?
 	let name: String
 	let filename: String
 	let attributes: Attributes?
@@ -34,10 +34,15 @@ class ImageAsset: Codable {
 	var isVector: Bool {
 		_isVector ?? true
 	}
+	
+	var codeOnly: Bool {
+		_codeOnly ?? false
+	}
 
 	enum CodingKeys: String, CodingKey {
 		case _type = "type"
 		case _isVector = "vector"
+		case _codeOnly = "codeOnly"
 		case name
 		case filename
 		case attributes
@@ -50,6 +55,7 @@ class ImageAsset: Codable {
 	private var _props: ContentsJSON.Properties?
 
 	private func _calculate() {
+		guard !codeOnly else { return } // skip if is codeOnly
 		switch type {
 		case .single:
 			_imgs = [
@@ -73,7 +79,6 @@ class ImageAsset: Codable {
 				let fileName = "\(baseName)\($0.element).\(fileExt)"
 				let scaleRaw = "\($0.offset + 1)x"
 				let filePath = (resourcesPath ?? "") / fileName
-				print(filePath)
 				guard FileUtils.fileExists(at: filePath) else { return }
 				_imgs?.append(
 					ContentsJSON.Image(

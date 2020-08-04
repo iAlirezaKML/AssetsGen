@@ -3,6 +3,7 @@ import Foundation
 class AssetGroup: Codable {
 	private let _hasNamespace: Bool?
 	private let _skipCodeGen: Bool?
+	private let _codeOnly: Bool?
 
 	let name: String
 	let groups: [AssetGroup]?
@@ -16,9 +17,14 @@ class AssetGroup: Codable {
 		_skipCodeGen ?? false
 	}
 
+	var codeOnly: Bool {
+		_codeOnly ?? false
+	}
+
 	enum CodingKeys: String, CodingKey {
 		case _hasNamespace = "namespace"
 		case _skipCodeGen = "skipCodeGen"
+		case _codeOnly = "codeOnly"
 		case name
 		case groups
 		case assets

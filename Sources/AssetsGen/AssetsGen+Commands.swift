@@ -236,7 +236,6 @@ extension AssetsGen {
 					let value = replace.newItem.value(for: Configs.baseLang, with: Configs.os) {
 					let newString = newStrings[index]
 					newString.resetValues(to: value, for: Configs.baseLang)
-					print(newString.values)
 					newStrings[index] = newString
 				}
 			}
