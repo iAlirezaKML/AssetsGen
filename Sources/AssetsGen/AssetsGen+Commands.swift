@@ -17,12 +17,6 @@ extension AssetsGen {
 		var codeGeneration = false
 		
 		@Flag(
-			name: .customLong("format-code"),
-			help: "Format generated code"
-		)
-		var codeFormat = false
-		
-		@Flag(
 			help: "Prevent cleanup files before operation"
 		)
 		var noCleanup = false
@@ -112,13 +106,6 @@ extension AssetsGen {
 			}
 			
 			runCommand()
-			
-			if options.codeGeneration, options.codeFormat {
-				print("Start formatting...")
-				SwiftFormatter.setup()
-				SwiftFormatter.format(options.outputPath)
-				print("Finished formatting!")
-			}
 		}
 		
 		func runCommand() {}
@@ -127,11 +114,15 @@ extension AssetsGen {
 	final class GenerateImages: DefaultCommand {
 		override func runCommand() {
 			print("Genrating images...")
-			let generator = AssetsGenerator(inputPath: options.inputPath)
+			let generator = AssetsGenerator(
+				inputPath: options.inputPath,
+				resourcesPath: options.resourcesPath
+			)
 			generator.generate(
 				outputPath: options.outputPath,
 				resourcesPath: options.resourcesPath,
-				codeGen: options.codeGeneration
+				codeGen: options.codeGeneration,
+				codePath: options.codeOutputPath
 			)
 			print("Images generated successfully!")
 		}

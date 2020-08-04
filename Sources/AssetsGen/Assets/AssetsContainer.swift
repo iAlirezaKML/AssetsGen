@@ -10,10 +10,8 @@ struct AssetsContainer: Codable {
 	var swiftCode: SwiftCode {
 		let groupsSwiftCodes = groups
 			.flatMap { $0.swiftCode }
-//			.joined(separator: "\n")
 		let assetsSwiftCodes = assets
 			.flatMap { $0.swiftCode(namespace: nil) }
-//			.joined(separator: "\n")
 		return [
 			.import("UIKit"),
 			.newline,
@@ -25,13 +23,5 @@ struct AssetsContainer: Codable {
 				].flatMap { $0 }
 			),
 		]
-//		return """
-//		import UIKit
-//
-//		public enum \(name) {
-//		\(groupsSwiftCodes)
-//		\(assetsSwiftCodes)
-//		}
-//		"""
 	}
 }

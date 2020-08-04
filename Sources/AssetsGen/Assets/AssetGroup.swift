@@ -2,16 +2,25 @@ import Foundation
 
 class AssetGroup: Codable {
 	private let _hasNamespace: Bool?
+	private let _skipCodeGen: Bool?
+
 	let name: String
-	let assets: [ImageAsset]
+	let groups: [AssetGroup]?
+	let assets: [ImageAsset]?
 
 	var hasNamespace: Bool {
 		_hasNamespace ?? true
 	}
 
+	var skipCodeGen: Bool {
+		_skipCodeGen ?? false
+	}
+
 	enum CodingKeys: String, CodingKey {
 		case _hasNamespace = "namespace"
+		case _skipCodeGen = "skipCodeGen"
 		case name
+		case groups
 		case assets
 	}
 
@@ -20,21 +29,19 @@ class AssetGroup: Codable {
 	)
 
 	var swiftCode: SwiftCode {
+		guard !skipCodeGen else { return [] }
 		let name = self.name.capitalized
-		let codes = assets
-			.flatMap { $0.swiftCode(namespace: name) }
-//			.joined(separator: "\n")
+		var codes = groups?
+			.flatMap { $0.swiftCode } ?? []
+		codes.append(
+			contentsOf: assets?
+				.flatMap { $0.swiftCode(namespace: name) } ?? []
+		)
 		return [
 			.enum(
 				name: name,
 				content: codes
 			),
 		]
-
-//		return """
-//		public enum \(name) {
-//		\(codes)
-//		}
-//		"""
 	}
 }

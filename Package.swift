@@ -15,7 +15,6 @@ let package = Package(
 	],
 	dependencies: [
 		.package(url: "https://github.com/apple/swift-argument-parser", from: "0.2.0"),
-		.package(url: "https://github.com/nicklockwood/SwiftFormat.git", from: "0.44.0"),
 		.package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.9.0"),
 		.package(url: "https://github.com/onmyway133/DeepDiff.git", from: "2.3.0"),
 	],
@@ -24,7 +23,6 @@ let package = Package(
 			name: "AssetsGen",
 			dependencies: [
 				.product(name: "ArgumentParser", package: "swift-argument-parser"),
-				"SwiftFormat",
 				"XMLCoder",
 				"DeepDiff",
 			]

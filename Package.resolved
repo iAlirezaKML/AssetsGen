@@ -20,15 +20,6 @@
         }
       },
       {
-        "package": "SwiftFormat",
-        "repositoryURL": "https://github.com/nicklockwood/SwiftFormat.git",
-        "state": {
-          "branch": null,
-          "revision": "a935652f66f5d2c1ad82951d4bdb69b005e82803",
-          "version": "0.44.4"
-        }
-      },
-      {
         "package": "XMLCoder",
         "repositoryURL": "https://github.com/MaxDesiatov/XMLCoder.git",
         "state": {

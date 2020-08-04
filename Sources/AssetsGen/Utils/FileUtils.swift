@@ -27,8 +27,12 @@ struct FileUtils {
 		}
 	}
 	
+	static func fileExists(at path: String) -> Bool {
+		FileManager.default.fileExists(atPath: path)
+	}
+	
 	static func makeSurePathExists(at path: String) {
-		if !FileManager.default.fileExists(atPath: path) {
+		if !fileExists(at: path) {
 			do {
 				let url = URL(fileURLWithPath: path)
 				try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

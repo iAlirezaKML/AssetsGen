@@ -1,6 +1,7 @@
 import Foundation
 
 class ImageAsset: Codable {
+
 	enum AssetType: String, Codable {
 		case single
 		case set
@@ -42,6 +43,8 @@ class ImageAsset: Codable {
 		case attributes
 	}
 
+	var resourcesPath: String?
+
 	private var _imgs: [ContentsJSON.Image]?
 	private var _res: [String]?
 	private var _props: ContentsJSON.Properties?
@@ -61,13 +64,17 @@ class ImageAsset: Codable {
 			_props = ContentsJSON.Properties(preservesVectorRepresentation: isVector)
 		case .set:
 			let fileParts = filename.split(separator: ".")
-			let (baseName, fileExt) = (fileParts[0], fileParts[1])
+			let fileExt = fileParts.last ?? ""
+			let baseName = fileParts.dropLast().joined(separator: ".")
 			let postfixes = ["", "@2x", "@3x"]
 			_imgs = []
 			_res = []
 			postfixes.enumerated().forEach {
 				let fileName = "\(baseName)\($0.element).\(fileExt)"
 				let scaleRaw = "\($0.offset + 1)x"
+				let filePath = (resourcesPath ?? "") / fileName
+				print(filePath)
+				guard FileUtils.fileExists(at: filePath) else { return }
 				_imgs?.append(
 					ContentsJSON.Image(
 						idiom: .universal,
@@ -109,7 +116,7 @@ class ImageAsset: Codable {
 			prefix = ""
 		}
 		let imageName = "\(prefix)\(name)"
-		let funcName = name.camelCased
+		let funcName = name.swiftCamelCased
 		return [
 			.funcReturnUIImage(
 				name: funcName,

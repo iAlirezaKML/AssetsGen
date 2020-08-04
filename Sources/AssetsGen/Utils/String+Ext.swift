@@ -161,3 +161,20 @@ prefix func .* (lhs: String) -> String {
 	let char = !lhs.isEmpty ? "." : ""
 	return "\(char)\(lhs)"
 }
+
+infix operator .+
+
+func .+ (lhs: String, rhs: String) -> String {
+	let char = !lhs.isEmpty && !rhs.isEmpty ? "." : ""
+	return "\(lhs)\(char)\(rhs)"
+}
+
+func || (lhs: String?, rhs: String?) -> String {
+	if let res = lhs, !res.isEmpty {
+		return res
+	} else if let res = rhs, !res.isEmpty {
+		return res
+	} else {
+		return ""
+	}
+}

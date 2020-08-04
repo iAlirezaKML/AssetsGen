@@ -23,13 +23,7 @@ struct StringsGenerator {
 			case .iOS:
 				source.generateStringsFile(at: path)
 				if codeGen {
-					let _path: String
-					if let p = codePath, !p.isEmpty {
-						_path = p
-					} else {
-						_path = path
-					}
-					source.generateSwiftCode(at: _path)
+					source.generateSwiftCode(at: codePath || path)
 				}
 			}
 		}
