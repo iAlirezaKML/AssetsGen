@@ -11,7 +11,7 @@ class StringsSource: Codable {
 			func swiftCode(
 				name: String,
 				key: String,
-				tableName: String = "Localizable.strings",
+				tableName: String = "Localizable",
 				comment: String?,
 				args: String?,
 				vars: String?
@@ -193,7 +193,7 @@ class StringsSource: Codable {
 			_values[key.langValue] = value
 			values = _computeValues()
 		}
-		
+
 		func resetValues(to value: Value, for key: LanguageKey) {
 			_values = [:]
 			set(value, for: key)
@@ -285,8 +285,9 @@ class StringsSource: Codable {
 	}
 
 	func swiftCode(for name: String) -> SwiftCode {
+		let tableName = fileName.split(separator: ".").dropLast().joined(separator: ".")
 		let swiftCodes = strings
-			.flatMap { $0.swiftCode(tableName: fileName) + [.newline] }
+			.flatMap { $0.swiftCode(tableName: tableName) + [.newline] }
 		return [
 			.import("Foundation"),
 			.import("ZSWTaggedStringSwift"),
@@ -384,7 +385,8 @@ extension StringsSource.StringItem: DiffAware {
 	static func compareContent(_ a: StringsSource.StringItem, _ b: StringsSource.StringItem) -> Bool {
 		let isSameValue: Bool
 		if let aValue = a.value(for: Configs.baseLang, with: Configs.os),
-			let bValue = b.value(for: Configs.baseLang, with: Configs.os) {
+			let bValue = b.value(for: Configs.baseLang, with: Configs.os)
+		{
 			isSameValue = aValue.localizableValue == bValue.localizableValue
 		} else {
 			isSameValue = false
