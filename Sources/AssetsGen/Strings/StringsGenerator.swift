@@ -13,19 +13,32 @@ struct StringsGenerator {
 		baseLang: LanguageKey,
 		os: OS
 	) {
-		let file = AnalyzedDuplicatesFile.shared
 		sources.forEach { source in
-			let crossReference = Dictionary(
+			// Duplicated Values
+			Dictionary(
 				grouping: source.strings,
 				by: { $0.value(for: baseLang, with: os)?.localizableValue ?? "" }
 			)
-			let duplicates = crossReference.filter { $1.count > 1 }
-			duplicates.forEach { key, values in
-				file.write(
+			.filter { $1.count > 1 }
+			.forEach { key, values in
+				DuplicateValuesFile.shared.write(
 					source: source.fileName,
 					value: key,
 					duplicatedKeys: values.map { $0.key }
 				)
+			}
+
+			// Duplicated Keys
+			Dictionary(
+				grouping: source.strings,
+				by: { $0.key }
+			)
+				.filter { $1.count > 1 }
+				.forEach { key, _ in
+					DuplicateKeysFile.shared.write(
+						source: source.fileName,
+						key: key
+					)
 			}
 		}
 	}
