@@ -385,8 +385,7 @@ extension StringsSource.StringItem: DiffAware {
 	static func compareContent(_ a: StringsSource.StringItem, _ b: StringsSource.StringItem) -> Bool {
 		let isSameValue: Bool
 		if let aValue = a.value(for: Configs.baseLang, with: Configs.os),
-			let bValue = b.value(for: Configs.baseLang, with: Configs.os)
-		{
+			let bValue = b.value(for: Configs.baseLang, with: Configs.os) {
 			isSameValue = aValue.localizableValue == bValue.localizableValue
 		} else {
 			isSameValue = false

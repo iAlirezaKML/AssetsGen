@@ -59,16 +59,24 @@ struct ContentsJSON: Codable {
 		}
 	}
 
+	enum TemplateRenderingIntent: String, Codable {
+		case template
+		case original
+	}
+
 	struct Properties: Codable {
 		let _providesNamespace: Bool?
 		let _preservesVectorRepresentation: Bool?
+		let _templateRenderingIntent: TemplateRenderingIntent?
 
 		init(
 			providesNamespace: Bool? = nil,
-			preservesVectorRepresentation: Bool? = nil
+			preservesVectorRepresentation: Bool? = nil,
+			templateRenderingIntent: TemplateRenderingIntent? = nil
 		) {
 			_providesNamespace = providesNamespace
 			_preservesVectorRepresentation = preservesVectorRepresentation
+			_templateRenderingIntent = templateRenderingIntent
 		}
 
 		var providesNamespace: Bool {
@@ -79,9 +87,14 @@ struct ContentsJSON: Codable {
 			_preservesVectorRepresentation ?? true
 		}
 
+		var templateRenderingIntent: TemplateRenderingIntent {
+			_templateRenderingIntent ?? .template
+		}
+
 		enum CodingKeys: String, CodingKey {
 			case _providesNamespace = "provides-namespace"
 			case _preservesVectorRepresentation = "preserves-vector-representation"
+			case _templateRenderingIntent = "template-rendering-intent"
 		}
 	}
 

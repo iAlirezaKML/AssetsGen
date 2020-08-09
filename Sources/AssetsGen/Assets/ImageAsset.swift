@@ -22,6 +22,7 @@ class ImageAsset: Codable {
 
 	private let _type: AssetType?
 	private let _isVector: Bool?
+	private let _isTemplate: Bool?
 	private let _codeOnly: Bool?
 	let name: String
 	let filename: String
@@ -35,6 +36,10 @@ class ImageAsset: Codable {
 		_isVector ?? true
 	}
 	
+	var isTemplate: Bool {
+		_isTemplate ?? true
+	}
+	
 	var codeOnly: Bool {
 		_codeOnly ?? false
 	}
@@ -42,6 +47,7 @@ class ImageAsset: Codable {
 	enum CodingKeys: String, CodingKey {
 		case _type = "type"
 		case _isVector = "vector"
+		case _isTemplate = "template"
 		case _codeOnly = "codeOnly"
 		case name
 		case filename
@@ -67,7 +73,10 @@ class ImageAsset: Codable {
 				),
 			]
 			_res = [filename]
-			_props = ContentsJSON.Properties(preservesVectorRepresentation: isVector)
+			_props = ContentsJSON.Properties(
+				preservesVectorRepresentation: isVector,
+				templateRenderingIntent: isTemplate ? .template : .original
+			)
 		case .set:
 			let fileParts = filename.split(separator: ".")
 			let fileExt = fileParts.last ?? ""
