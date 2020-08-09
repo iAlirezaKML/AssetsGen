@@ -9,6 +9,27 @@ struct StringsGenerator {
 		self.sources = sources
 	}
 
+	func analyze(
+		baseLang: LanguageKey,
+		os: OS
+	) {
+		let file = AnalyzedDuplicatesFile.shared
+		sources.forEach { source in
+			let crossReference = Dictionary(
+				grouping: source.strings,
+				by: { $0.value(for: baseLang, with: os)?.localizableValue ?? "" }
+			)
+			let duplicates = crossReference.filter { $1.count > 1 }
+			duplicates.forEach { key, values in
+				file.write(
+					source: source.fileName,
+					value: key,
+					duplicatedKeys: values.map { $0.key }
+				)
+			}
+		}
+	}
+
 	func generate(
 		baseLang: LanguageKey,
 		os: OS,

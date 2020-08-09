@@ -10,6 +10,7 @@ struct AssetsGen: ParsableCommand {
 		version: "0.3.0",
 		subcommands: [
 			GenerateImages.self,
+			AnalyzeStrings.self,
 			GenerateStrings.self,
 			GenerateTranslations.self,
 			ParseTranslations.self,

@@ -171,3 +171,24 @@ final class ParseXLIFFFile: CSVFile {
 		]))
 	}
 }
+
+final class AnalyzedDuplicatesFile: CSVFile {
+	static let shared = AnalyzedDuplicatesFile()
+	
+	private init() {
+		super.init(fileName: "AnalyzedDuplicatesFile")
+		write(join([
+			"source",
+			"value",
+			"duplicatedKeys",
+		]))
+	}
+	
+	func write(source: String, value: String, duplicatedKeys: [String]) {
+		write(join([
+			source,
+			value,
+			escape(duplicatedKeys.joined(separator: ";")),
+		]))
+	}
+}

@@ -128,6 +128,24 @@ extension AssetsGen {
 		}
 	}
 	
+	final class AnalyzeStrings: DefaultCommand {
+		override func runCommand() {
+			print("Analyzing strings...")
+			let generator = StringsGenerator(
+				projectName: options.projectName,
+				sources: .init(
+					inputPath: options.inputPath,
+					files: options.filesValue
+				)
+			)
+			generator.analyze(
+				baseLang: options.baseLangValue,
+				os: options.osValue
+			)
+			print("Strings analyzed successfully!")
+		}
+	}
+	
 	final class GenerateStrings: DefaultCommand {
 		override func runCommand() {
 			print("Genrating strings...")
