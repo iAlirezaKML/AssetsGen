@@ -9,7 +9,7 @@ struct AssetsContainer: Codable {
 
 	var swiftCode: SwiftCode {
 		let groupsSwiftCodes = groups
-			.flatMap { $0.swiftCode }
+			.flatMap { $0.swiftCode(namespace: nil) }
 		let assetsSwiftCodes = assets
 			.flatMap { $0.swiftCode(namespace: nil) }
 		return [

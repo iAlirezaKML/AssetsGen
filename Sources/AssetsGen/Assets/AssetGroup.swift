@@ -34,14 +34,20 @@ class AssetGroup: Codable {
 		properties: ContentsJSON.Properties(providesNamespace: hasNamespace)
 	)
 
-	var swiftCode: SwiftCode {
+	func swiftCode(namespace: String?) -> SwiftCode {
 		guard !skipCodeGen else { return [] }
+		let prefix: String
+		if let namespace = namespace, !namespace.isEmpty {
+			prefix = "\(namespace)/"
+		} else {
+			prefix = ""
+		}
 		let name = self.name.camelCased
 		var codes = groups?
-			.flatMap { $0.swiftCode } ?? []
+			.flatMap { $0.swiftCode(namespace: prefix + name) } ?? []
 		codes.append(
 			contentsOf: assets?
-				.flatMap { $0.swiftCode(namespace: name) } ?? []
+				.flatMap { $0.swiftCode(namespace: prefix + name) } ?? []
 		)
 		return [
 			.enum(
