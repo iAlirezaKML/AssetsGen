@@ -36,7 +36,7 @@ class AssetGroup: Codable {
 
 	var swiftCode: SwiftCode {
 		guard !skipCodeGen else { return [] }
-		let name = self.name.capitalized
+		let name = self.name.camelCased
 		var codes = groups?
 			.flatMap { $0.swiftCode } ?? []
 		codes.append(
