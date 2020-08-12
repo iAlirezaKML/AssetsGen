@@ -51,8 +51,8 @@ enum SwiftCodeTemplate {
 		case let .funcReturnString(name, key, tableName, comment, args, vars):
 			return """
 			public static func \(name)(\(args)) -> String {
-			return String(
-			format: NSLocalizedString(
+			return String.localizedStringWithFormat(
+			NSLocalizedString(
 			"\(key)",
 			tableName: "\(tableName)",
 			comment: "\(comment)"
@@ -106,7 +106,7 @@ enum SwiftCodeTemplate {
 
 extension Array where Element == SwiftCodeTemplate {
 	var raw: String {
-		map { $0.code }
+		map(\.code)
 			.joined(separator: "\n")
 	}
 }
