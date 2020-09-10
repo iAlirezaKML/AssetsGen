@@ -1,15 +1,12 @@
 import Foundation
 
-// func SwiftCode(_ template: SwiftCodeTemplate) -> String {
-//	return template.code
-// }
-
 typealias SwiftCode = [SwiftCodeTemplate]
 
 enum SwiftCodeTemplate {
 	case newline
 	case `import`(_ name: String)
 	case funcReturnString(
+		preview: String?,
 		name: String,
 		key: String,
 		tableName: String,
@@ -18,6 +15,7 @@ enum SwiftCodeTemplate {
 		vars: String
 	)
 	case funcReturnAttributedString(
+		preview: String?,
 		name: String,
 		key: String,
 		tableName: String,
@@ -48,8 +46,12 @@ enum SwiftCodeTemplate {
 		case let .import(name):
 			return "import \(name)"
 
-		case let .funcReturnString(name, key, tableName, comment, args, vars):
-			return """
+		case let .funcReturnString(preview, name, key, tableName, comment, args, vars):
+			var _result = ""
+			if let preview = preview {
+				_result += "/// \(preview)\n"
+			}
+			_result += """
 			public static func \(name)(\(args)) -> String {
 			return String.localizedStringWithFormat(
 			NSLocalizedString(
@@ -60,9 +62,14 @@ enum SwiftCodeTemplate {
 			)
 			}
 			"""
+			return _result
 
-		case let .funcReturnAttributedString(name, key, tableName, comment, args, vars):
-			return """
+		case let .funcReturnAttributedString(preview, name, key, tableName, comment, args, vars):
+			var _result = ""
+			if let preview = preview {
+				_result += "/// \(preview)\n"
+			}
+			_result += """
 			public static func \(name)(\(args)) -> NSAttributedString? {
 			return try? ZSWTaggedString(
 			format: NSLocalizedString(
@@ -73,6 +80,7 @@ enum SwiftCodeTemplate {
 			).attributedString()
 			}
 			"""
+			return _result
 
 		case let .funcReturnStringArray(name, key, tableName, comment):
 			return """

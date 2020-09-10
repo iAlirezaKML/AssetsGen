@@ -57,7 +57,7 @@ struct StringsGenerator {
 			case .iOS:
 				source.generateStringsFile(at: path)
 				if codeGen {
-					source.generateSwiftCode(at: codePath || path)
+					source.generateSwiftCode(at: codePath || path, baseLang: baseLang)
 				}
 			}
 		}
