@@ -65,11 +65,25 @@ class StringsSource: Codable {
 	}
 
 	func generateStringsFile(at outputPath: String) {
-		langs.forEach { lang in
+		for lang in langs {
 			let content = localizedContent(for: lang)
+			let path = outputPath / "\(lang.langValue).lproj" / fileName
+			let tempPath = outputPath / "temp.strings"
 			FileUtils.save(
 				contents: content,
-				inPath: outputPath / "\(lang.langValue).lproj" / fileName
+				inPath: tempPath
+			)
+			let lintResult = FileUtils.shell("plutil -lint \(tempPath)")
+				.trimmingCharacters(in: .whitespacesAndNewlines)
+			FileUtils.remove(atPath: tempPath)
+			if !lintResult.isEmpty, !lintResult.hasSuffix("OK") {
+				print("Lint failed. Skipping lang \(lang.rawValue)")
+				print(lintResult)
+				continue
+			}
+			FileUtils.save(
+				contents: content,
+				inPath: path
 			)
 		}
 	}
