@@ -138,17 +138,53 @@ class StringsSource: Codable {
 
 extension StringsSource {
 	class StringItem: Codable {
+		struct Element: Codable, Comparable {
+			static func < (lhs: Self, rhs: Self) -> Bool {
+				lhs.key < rhs.key
+			}
+
+			static func == (lhs: Self, rhs: Self) -> Bool {
+				lhs.key == rhs.key
+			}
+
+			let key: String
+			var value: Value
+		}
+
 		let key: String
 		let comment: String?
 		private let _type: StringType?
 		let variables: [Variable]?
-		private(set) var _values: [String: Value]
+		private(set) var _values: [Element]
 
 		var type: StringType {
 			_type ?? .single
 		}
 
 		private(set) lazy var values = _computeValues()
+
+		required init(from decoder: Decoder) throws {
+			let container = try decoder.container(keyedBy: CodingKeys.self)
+			key = try container.decode(String.self, forKey: .key)
+			comment = try? container.decode(String.self, forKey: .comment)
+			_type = try? container.decode(StringType.self, forKey: ._type)
+			variables = try? container.decode([Variable].self, forKey: .variables)
+			// try the dictionary for backward compatibility
+			if let values = try? container.decode([String: Value].self, forKey: ._values) {
+				_values = values.map { Element(key: $0.key, value: $0.value) }
+			} else {
+				_values = try container.decode([Element].self, forKey: ._values)
+			}
+		}
+
+		func encode(to encoder: Encoder) throws {
+			var container = encoder.container(keyedBy: CodingKeys.self)
+			try container.encode(key, forKey: .key)
+			try container.encode(comment, forKey: .comment)
+			try container.encode(_type, forKey: ._type)
+			try container.encode(variables, forKey: .variables)
+			try container.encode(_values.sorted(by: <), forKey: ._values)
+		}
 
 		enum CodingKeys: String, CodingKey {
 			case key
@@ -163,7 +199,7 @@ extension StringsSource {
 			comment: String?,
 			type: StringType,
 			variables: [Variable]?,
-			values: [String: Value]
+			values: [Element]
 		) {
 			self.key = key
 			self.comment = comment
@@ -174,7 +210,7 @@ extension StringsSource {
 
 		private func _computeValues() -> [LanguageKey: Value] {
 			let array = _values.map {
-				(LanguageKey(rawValue: $0) ?? .raw($0), $1)
+				(LanguageKey(rawValue: $0.key) ?? .raw($0.key), $0.value)
 			}
 			return Dictionary(uniqueKeysWithValues: array)
 		}
@@ -184,12 +220,16 @@ extension StringsSource {
 		}
 
 		func set(_ value: Value, for key: LanguageKey) {
-			_values[key.langValue] = value
+			if let idx = _values.firstIndex(where: { $0.key == key.rawValue }) {
+				_values[idx].value = value
+			} else {
+				_values.append(Element(key: key.rawValue, value: value))
+			}
 			values = _computeValues()
 		}
 
 		func resetValues(to value: Value, for key: LanguageKey) {
-			_values = [:]
+			_values = []
 			set(value, for: key)
 		}
 

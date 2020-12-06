@@ -10,7 +10,11 @@ enum OS: String, Codable, ExpressibleByStringLiteral {
 	}
 }
 
-enum LanguageKey: RawRepresentable, Codable, Hashable, ExpressibleByStringLiteral {
+enum LanguageKey: RawRepresentable, Codable, Hashable, Equatable, Comparable, ExpressibleByStringLiteral {
+	static func < (lhs: LanguageKey, rhs: LanguageKey) -> Bool {
+		lhs.rawValue < rhs.rawValue
+	}
+	
 	case raw(_ lang: String)
 	case specific(_ lang: String, os: OS)
 

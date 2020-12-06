@@ -49,7 +49,7 @@ class XMLStringParser {
 				comment: nil,
 				type: $0.isAttributed ? .attributed : .single,
 				variables: nil,
-				values: [lang.langValue: .single($0.content ?? "")]
+				values: [StringsSource.StringItem.Element(key: lang.langValue, value: .single($0.content ?? ""))]
 			)
 		}
 		let arrays = xml.stringArrays.map {
@@ -58,7 +58,7 @@ class XMLStringParser {
 				comment: nil,
 				type: .array,
 				variables: nil,
-				values: [lang.langValue: .array($0.items)]
+				values: [StringsSource.StringItem.Element(key: lang.langValue, value: .array($0.items))]
 			)
 		}
 		let newStrings = singles + arrays
