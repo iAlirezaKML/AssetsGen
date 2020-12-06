@@ -385,12 +385,19 @@ extension StringsSource.StringItem {
 		var localizableValue: String {
 			switch self {
 			case let .single(string):
-				return string.unescapedQuotes
+				return decodeNumericEntities(string)
 			case let .array(strings):
 				return strings
-					.map { "<item>\($0.unescapedQuotes)</item>" }
+					.map { "<item>\(decodeNumericEntities($0))</item>" }
 					.joined(separator: ",")
 			}
+		}
+
+		private func decodeNumericEntities(_ input: String) -> String {
+			let nsMutableString = NSMutableString(string: input)
+			CFStringTransform(nsMutableString, nil, "Any-Hex/XML10" as CFString, true)
+			let str = nsMutableString as String
+			return str.unescapedQuotes
 		}
 
 		func xml(type: StringType) -> XMLElement {
