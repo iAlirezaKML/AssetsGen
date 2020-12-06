@@ -5,7 +5,7 @@ struct AssetsContainer: Codable {
 	let groups: [AssetGroup]
 	let assets: [ImageAsset]
 
-	let contentsJSON = ContentsJSON()
+	var contentsJSON = ContentsJSON()
 
 	var swiftCode: SwiftCode {
 		let groupsSwiftCodes = groups

@@ -1,10 +1,12 @@
 import ArgumentParser
 
-struct AssetsGen: ParsableCommand {
+public struct AssetsGen: ParsableCommand {
 	@OptionGroup()
 	var options: Options
+	
+	public init() {}
 
-	static let configuration = CommandConfiguration(
+	public static let configuration = CommandConfiguration(
 		commandName: "assetsGen",
 		abstract: "A Utility to Parse/Generate iOS/Android Assets(Strings/Images)",
 		version: "0.4.4",

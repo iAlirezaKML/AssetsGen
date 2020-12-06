@@ -1,17 +1,15 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.3
 
 import PackageDescription
 
 let package = Package(
 	name: "AssetsGen",
 	platforms: [
-		.macOS(.v10_14),
+		.macOS(.v10_15),
 	],
 	products: [
-		.executable(
-			name: "assetsGen",
-			targets: ["AssetsGen"]
-		),
+		.executable(name: "assetsGen", targets: ["CommandLineTool"]),
+		.library(name: "AssetsGenLib", targets: ["AssetsGenLib"]),
 	],
 	dependencies: [
 		.package(url: "https://github.com/apple/swift-argument-parser", from: "0.2.0"),
@@ -20,12 +18,14 @@ let package = Package(
 	],
 	targets: [
 		.target(
-			name: "AssetsGen",
+			name: "AssetsGenLib",
 			dependencies: [
 				.product(name: "ArgumentParser", package: "swift-argument-parser"),
 				"XMLCoder",
 				"DeepDiff",
 			]
 		),
+		.target(name: "CommandLineTool", dependencies: ["AssetsGenLib"]),
+		.testTarget(name: "AssetsGenTests", dependencies: ["AssetsGenLib"]),
 	]
 )

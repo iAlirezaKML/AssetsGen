@@ -1,0 +1,3 @@
+import AssetsGenLib
+
+AssetsGen.main()

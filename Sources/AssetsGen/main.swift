@@ -1,1 +1,0 @@
-AssetsGen.main()
