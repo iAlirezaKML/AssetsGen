@@ -85,7 +85,12 @@ class StringsSource: Codable {
 	func generateXMLFile(at outputPath: String, baseLang: LanguageKey) {
 		langs.forEach { lang in
 			let content = xml(for: lang)
-			let langKey = lang == baseLang ? "" : lang.langValue
+			var langKey = lang == baseLang ? "" : lang.langValue
+			let langKeyComps = langKey.components(separatedBy: "-")
+			if langKeyComps.count == 2 {
+				let regionCode = "r" + langKeyComps[1]
+				langKey = langKeyComps[0] + "-" + regionCode
+			}
 			let contents = content
 				.xmlString(options: .nodePrettyPrint)
 				.trimmingCharacters(in: .whitespacesAndNewlines)
