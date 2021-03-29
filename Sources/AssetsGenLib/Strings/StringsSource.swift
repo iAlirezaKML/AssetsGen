@@ -30,6 +30,13 @@ class StringsSource: Codable {
 		self.codeName = codeName
 		self.strings = strings
 	}
+	
+	required init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		fileName = try container.decode(String.self, forKey: .fileName)
+		codeName = try container.decode(String.self, forKey: .codeName)
+		strings = try container.decode([FailableDecodable<StringItem>].self, forKey: .strings).compactMap { $0.base }
+	}
 
 	func localized(for lang: LanguageKey) -> [StringItem.Content] {
 		strings
@@ -154,6 +161,9 @@ class StringsSource: Codable {
 		)
 	}
 }
+enum ParsingError: Error {
+	case excluded
+}
 
 extension StringsSource {
 	class StringItem: Codable {
@@ -184,7 +194,11 @@ extension StringsSource {
 
 		required init(from decoder: Decoder) throws {
 			let container = try decoder.container(keyedBy: CodingKeys.self)
-			key = try container.decode(String.self, forKey: .key)
+			let key = try container.decode(String.self, forKey: .key)
+			if Configs.excludeKeys?.contains(key) == true {
+				throw ParsingError.excluded
+			}
+			self.key = key
 			comment = try? container.decode(String.self, forKey: .comment)
 			_type = try? container.decode(StringType.self, forKey: ._type)
 			variables = try? container.decode([Variable].self, forKey: .variables)

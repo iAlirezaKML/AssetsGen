@@ -6,6 +6,16 @@ struct Configs {
 	fileprivate(set) static var outputPath: String!
 	fileprivate(set) static var baseLang: LanguageKey!
 	fileprivate(set) static var os: OS!
+	fileprivate(set) static var excludeKeysPath: String? {
+		didSet {
+			excludeKeys = excludeKeysPath
+				.flatMap(FileUtils.data(atPath:))
+				.flatMap { String(data: $0, encoding: .utf8) }
+				.map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) } }
+		}
+	}
+
+	private(set) static var excludeKeys: [String]?
 }
 
 extension AssetsGen {
@@ -15,102 +25,105 @@ extension AssetsGen {
 			help: "Generate corresponding code"
 		)
 		var codeGeneration = false
-		
+
 		@Flag(
 			help: "Prevent cleanup files before operation"
 		)
 		var noCleanup = false
-		
+
 		@Flag(help: "Filter only new keys")
 		var filterKeys = false
-		
+
 		@Option(help: "Path to resources")
 		var resourcesPath: String = ""
-		
+
 		@Option(help: "Path to xliff translations")
 		var sourcesPath: String = ""
-		
+
 		@Option(help: "Path to input json index")
 		var inputPath: String = ""
-		
+
 		@Option(help: "Path to save the output")
 		var outputPath: String = ""
 
 		@Option(help: "Path to generate code")
 		var codeOutputPath: String = ""
-		
+
 		@Option(
 			name: .customLong("proj"),
 			help: "Name of the project"
 		)
 		var projectName: String = ""
-		
+
 		@Option(help: "List of the json source files")
 		var files: String = ""
-		
+
 		@Option(help: "List of the xliff translated files")
 		var sources: String = ""
-		
+
+		@Option(help: "Path to csv file containing keywords to exclude")
+		var excludeKeysPath: String = ""
+
 		@Option(help: "List of the target languages")
 		var langs: String = ""
-		
+
 		@Option(help: "Base language key")
 		var baseLang: String = "en"
-		
+
 		@Option(help: "Target platform os: ios|android")
 		var os: String = ""
-		
+
 		var filesValue: [String] {
 			_array(from: files)
 		}
-		
+
 		var sourcesValue: [String] {
 			_array(from: sources)
 		}
-		
+
 		var langsValue: [LanguageKey] {
 			_array(from: langs)
 				.map(LanguageKey.init)
 		}
-		
+
 		var baseLangValue: LanguageKey {
 			LanguageKey(stringLiteral: baseLang)
 		}
-		
+
 		var osValue: OS {
 			OS(stringLiteral: os)
 		}
-		
+
 		private func _array(from string: String) -> [String] {
 			string
 				.split(separator: ",")
 				.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 		}
 	}
-	
+
 	class DefaultCommand: ParsableCommand {
 		@OptionGroup()
 		var options: Options
-		
+
 		required init() {}
-		
+
 		func run() throws {
 			Configs.outputPath = options.outputPath
 			Configs.baseLang = options.baseLangValue
 			Configs.os = options.osValue
-			
+
 			if !options.noCleanup {
 				print("Cleaning output...")
 				FileUtils.remove(atPath: options.outputPath)
 				print("Finished cleaning!")
 			}
-			
+
 			runCommand()
 		}
-		
+
 		func runCommand() {}
 	}
-	
+
 	final class GenerateImages: DefaultCommand {
 		override func runCommand() {
 			print("Genrating images...")
@@ -127,7 +140,7 @@ extension AssetsGen {
 			print("Images generated successfully!")
 		}
 	}
-	
+
 	final class AnalyzeStrings: DefaultCommand {
 		override func runCommand() {
 			print("Analyzing strings...")
@@ -145,7 +158,7 @@ extension AssetsGen {
 			print("Strings analyzed successfully!")
 		}
 	}
-	
+
 	final class GenerateStrings: DefaultCommand {
 		override func runCommand() {
 			print("Genrating strings...")
@@ -166,10 +179,13 @@ extension AssetsGen {
 			print("Strings generated successfully!")
 		}
 	}
-	
+
 	final class GenerateTranslations: DefaultCommand {
 		override func runCommand() {
 			print("Genrating translations...")
+			if !options.excludeKeysPath.isEmpty {
+				Configs.excludeKeysPath = options.excludeKeysPath
+			}
 			let generator = XLIFFGenerator(
 				projectName: options.projectName,
 				sources: .init(
@@ -186,7 +202,7 @@ extension AssetsGen {
 			print("Translations generated successfully!")
 		}
 	}
-	
+
 	final class ParseTranslations: DefaultCommand {
 		override func runCommand() {
 			print("Parsing translations...")
@@ -203,7 +219,7 @@ extension AssetsGen {
 			print("Translations parsed successfully!")
 		}
 	}
-	
+
 	final class GenerateSeedStrings: DefaultCommand {
 		override func runCommand() {
 			print("Generating seed strings...")
@@ -220,7 +236,7 @@ extension AssetsGen {
 			print("Seed strings generated successfully!")
 		}
 	}
-	
+
 	final class ParseXMLStrings: DefaultCommand {
 		override func runCommand() {
 			print("Parsing xml strings...")
@@ -240,10 +256,10 @@ extension AssetsGen {
 				return
 			}
 			let changes = diff(old: source.strings, new: generator.strings)
-			let replaces = changes.compactMap { $0.replace }
-			let inserts = changes.compactMap { $0.insert }
-			let deletes = changes.compactMap { $0.delete }
-			let moves = changes.compactMap { $0.move }
+			let replaces = changes.compactMap(\.replace)
+			let inserts = changes.compactMap(\.insert)
+			let deletes = changes.compactMap(\.delete)
+			let moves = changes.compactMap(\.move)
 			ParseReplacesFile.shared.write(replaces)
 			ParseInsertsFile.shared.write(inserts)
 			ParseDeletesFile.shared.write(deletes)
@@ -251,7 +267,7 @@ extension AssetsGen {
 			var newStrings = source.strings
 			replaces.forEach { replace in
 				if let index = newStrings.firstIndex(where: { $0.key == replace.newItem.key }),
-					let value = replace.newItem.value(for: Configs.baseLang, with: Configs.os) {
+				   let value = replace.newItem.value(for: Configs.baseLang, with: Configs.os) {
 					let newString = newStrings[index]
 					newString.resetValues(to: value, for: Configs.baseLang)
 					newStrings[index] = newString
@@ -265,9 +281,9 @@ extension AssetsGen {
 			inserts.forEach { insert in
 				newStrings.insert(insert.item, at: insert.index)
 			}
-			moves.forEach({ move in
+			moves.forEach { move in
 				newStrings[move.toIndex] = move.item
-			})
+			}
 			let fileName = "\(projectName).strings.json".replacingOccurrences(of: "..", with: ".")
 			FileUtils.saveJSON(newStrings, inPath: options.outputPath / fileName)
 			print("Parsed xml strings successfully!")
