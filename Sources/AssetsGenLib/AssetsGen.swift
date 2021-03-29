@@ -9,7 +9,7 @@ public struct AssetsGen: ParsableCommand {
 	public static let configuration = CommandConfiguration(
 		commandName: "assetsGen",
 		abstract: "A Utility to Parse/Generate iOS/Android Assets(Strings/Images)",
-		version: "0.4.4",
+		version: "0.4.5",
 		subcommands: [
 			GenerateImages.self,
 			AnalyzeStrings.self,
