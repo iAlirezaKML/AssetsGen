@@ -213,10 +213,12 @@ extension StringsSource {
 		func encode(to encoder: Encoder) throws {
 			var container = encoder.container(keyedBy: CodingKeys.self)
 			try container.encode(key, forKey: .key)
-			try container.encode(comment, forKey: .comment)
-			try container.encode(_type, forKey: ._type)
-			try container.encode(variables, forKey: .variables)
-			try container.encode(_values.sorted(by: <), forKey: ._values)
+			try container.encodeIfPresent(comment, forKey: .comment)
+			try container.encodeIfPresent(_type, forKey: ._type)
+			try container.encodeIfPresent(variables, forKey: .variables)
+			let values = _values.map({ ($0.key, $0.value) })
+			let dict = Dictionary(values, uniquingKeysWith: { $1 })
+			try container.encode(dict, forKey: ._values)
 		}
 
 		enum CodingKeys: String, CodingKey {

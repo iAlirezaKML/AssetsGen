@@ -56,7 +56,7 @@ struct FileUtils {
 
 	static func saveJSON<T: Encodable>(_ encodable: T, inPath path: String) {
 		let encoder = JSONEncoder()
-		encoder.outputFormatting = .prettyPrinted
+		encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 		do {
 			let jsonData = try encoder.encode(encodable)
 			if let jsonString = String(data: jsonData, encoding: .utf8) {
